@@ -22,3 +22,4 @@ SortIncludes: true
 SpaceBeforeAssignmentOperators: true
 AlwaysBreakBeforeMultilineStrings: true
 AllowShortLambdasOnASingleLine: false
+AlwaysBreakTemplateDeclarations: true
