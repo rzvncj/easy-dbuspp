@@ -20,10 +20,9 @@
 
 namespace easydbuspp {
 
-proxy::proxy(session_manager& session_manager, const std::string& bus_name, const std::string& interface_name,
+proxy::proxy(session_manager& session_mgr, const std::string& bus_name, const std::string& interface_name,
              const object_path_t& object_path)
-    : session_manager_ {session_manager}, bus_name_ {bus_name}, interface_name_ {interface_name},
-      object_path_ {object_path}
+    : session_manager_ {session_mgr}, bus_name_ {bus_name}, interface_name_ {interface_name}, object_path_ {object_path}
 {
     GError* error {nullptr};
 

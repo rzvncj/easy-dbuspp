@@ -25,15 +25,24 @@
 
 namespace easydbuspp {
 
+/*!
+ * Utility class connected to `/net/freedesktop/DBus`.
+ */
 class org_freedesktop_dbus_proxy : public proxy {
 
 public:
-    org_freedesktop_dbus_proxy(session_manager& session_manager);
+    //! Constructor. Connects to D-Bus via the session_manager's connection.
+    org_freedesktop_dbus_proxy(session_manager& session_mgr);
 
 public:
+    //! Get the unique bus name of a well-known bus name.
     std::string unique_bus_name(const std::string& well_known_bus_name) const;
-    uid_t       uid(const std::string& well_known_bus_name) const;
-    uid_t       pid(const std::string& well_known_bus_name) const;
+
+    //! Get the UID of the process that owns `well_known_bus_name`.
+    uid_t uid(const std::string& well_known_bus_name) const;
+
+    //! Get the PID of the process that owns `well_known_bus_name`.
+    uid_t pid(const std::string& well_known_bus_name) const;
 };
 
 } // end of namespace easydbuspp

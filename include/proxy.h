@@ -28,28 +28,82 @@ namespace easydbuspp {
 
 class session_manager;
 
+/*!
+ * Proxies connect to D-Bus objects, call their methods, examine and set their properties.
+ */
 class proxy {
 
 public:
-    proxy(session_manager& session_manager, const std::string& bus_name, const std::string& interface_name,
+    /*!
+     * Constructor.
+     *
+     * @param session_mgr    The session_manager object that manages an established connection to
+     *                       the D-Bus.
+     * @param bus_name       The bus name that the remote object is connected to.
+     * @param interface_name The interface we want to use on the remote object.
+     * @param object_path    The path of the remote object.
+     */
+    proxy(session_manager& session_mgr, const std::string& bus_name, const std::string& interface_name,
           const object_path_t& object_path);
+
+    //! Destructor. Cleans managed resources up.
     virtual ~proxy();
 
     proxy(const proxy&)            = delete;
     proxy& operator=(const proxy&) = delete;
 
+    /*!
+     * Returns the bus name that the proxy is connected to (NOT the bus name of the remote object
+     * it represents!).
+     */
     std::string unique_bus_name() const;
 
+    /*!
+     * Calls a method on the remote object.
+     *
+     * @param method_name The name of the method we want to call on the remote object.
+     * @param parameters  Any parameters that the remote method takes. The types and number of
+     *                    parameters passed here must match the types and number of arguments
+     *                    of the method.
+     * @return            Whatever the remote method returns. For multiple return values, this
+     *                    will need to be an `std::tuple`.
+     * @throw             std::runtime_error
+     */
     template <typename R, typename... A>
     R call(const std::string& method_name, A... parameters) const;
 
+    /*!
+     * Returns a cached property. When we initialize the proxy, it will cache all the properties
+     * of the remote object. When one of those are changed, assuming that the remote object
+     * triggers the `"PropertiesChanged"` signal, our cache gets updated as well.
+     *
+     * @param  property_name The name of the property we want to query.
+     * @return The value of the requested property.
+     */
     template <typename T>
     T cached_property(const std::string& property_name) const;
 
+    /*!
+     * Sets a cached property. This will only affect the cache of our proxy, not the remote
+     * object. If changing the property on the actual remote object is desired, use the
+     * `property()` member function instead.
+     *
+     * @param property_name The name of the property we want to query.
+     * @param new_value     The new value we want to set the property to.
+     */
     template <typename T>
     void cached_property(const std::string& property_name, const T& new_value);
 
-    // This will actually incur a proxy call to org.freedesktop.DBus.Properties.Set.
+    /*!
+     * Sets a property directly on the remote object. Assuming that the remote object triggers
+     * the `"PropertiesChanged"` signal, our cache gets updated as well. So a subsequent
+     * read from the cache will reflect the remote change.
+     *
+     * This is expensive, because it incurs a proxy call to `org.freedesktop.DBus.Properties.Set`.
+     *
+     * @param property_name The name of the property we want to query.
+     * @param new_value     The new value we want to set the property to.
+     */
     template <typename T>
     void property(const std::string& property_name, const T& new_value);
 

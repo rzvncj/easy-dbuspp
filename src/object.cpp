@@ -19,8 +19,8 @@
 
 namespace easydbuspp {
 
-object::object(session_manager& session_manager, const std::string& interface_name, const object_path_t& object_path)
-    : session_manager_ {session_manager}, interface_name_ {interface_name}, object_path_ {object_path},
+object::object(session_manager& session_mgr, const std::string& interface_name, const object_path_t& object_path)
+    : session_manager_ {session_mgr}, interface_name_ {interface_name}, object_path_ {object_path},
       introspection_data_ {nullptr, g_dbus_node_info_unref}
 {
     session_manager_.attach(this);

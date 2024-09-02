@@ -30,25 +30,65 @@ namespace easydbuspp {
 class object;
 class proxy;
 
+//! The kinds of bus to connect to.
 enum class bus_type_t { SESSION, SYSTEM };
 
+/*!
+ * session_manager manages the D-Bus connection and runs (if asked to) the main loop, which makes sure
+ * events such as method calls, property queries and signal deliveries are processed.
+ */
 class session_manager {
 
     using signal_handler_t = std::function<void(GVariant*)>;
 
 public:
+    /*!
+     * Constructor. This synchronously connects to the D-Bus, but does not request a bus name.
+     * It's the constructor to use when you only need to create proxies.
+     *
+     * @param bus_type Which bus to connect to (the session or system bus).
+     */
     session_manager(bus_type_t bus_type);
+
+    /*!
+     * Constructor. This connects to the D-Bus to request a bus name.
+     * It's the constructor to use when you want to use objects (to provide a service).
+     * You may use proxies with it as well.
+     *
+     * @param bus_type Which bus to connect to (the session or system bus).
+     * @param bus_name The requested bus name.
+     */
     session_manager(bus_type_t bus_type, const std::string& bus_name);
+
+    //! Destructor. Detaches attached objects, releases the bus name.
     ~session_manager();
 
     session_manager(const session_manager&)            = delete;
     session_manager& operator=(const session_manager&) = delete;
 
+    /*!
+     * Register a callback to be called when a signal is received.
+     *
+     * @param name           The signal name.
+     * @param callable       Any callable object (as long as it can be converted to an `std::function`).
+     *                       So a lambda, a function pointer, a custom functor, etc. The parameter
+     *                       types and number must match the types and number of arguments of the signal.
+     * @param sender         (Optional) If this is not empty, the unique bus name of the sender of the
+     *                       signal. It would only not be empty for unicast signals. Broadcast signals
+     *                       do not require this.
+     * @param interface_name (Optional) The interface name that defines the signal we're expecting.
+     *                       Again, this will be missing for broadcast signals.
+     * @param object_path    (Optional) The path of the object that is emitting the signal. Leave empty
+     *                       when expecting broadcast signals.
+     */
     template <typename C>
     void signal_subscribe(const std::string& signal_name, C&& callable, const std::string& sender = {},
                           const std::string& interface_name = {}, const object_path_t& object_path = {});
 
+    //! Start the D-Bus event processing loop.
     void run();
+
+    //! Stop the D-Bus event processing loop.
     void stop();
 
 private:
