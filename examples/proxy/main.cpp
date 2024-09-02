@@ -118,7 +118,7 @@ int main()
             },
             unique_bus_name.c_str(), "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject");
 
-        auto a = std::async(std::launch::async, [&session_manager]() {
+        auto a = std::async(std::launch::async, [&session_manager] {
             session_manager.run();
         });
 

@@ -83,6 +83,37 @@ object.add_property("ReadWriteStringProp", readwrite_str);
 ```
 
 Properties can also be registered by providing setter and getter callbacks.
+If only the getter callback is provided, the property will be read-only.
+If both are provided, the property will be readwrite. And if only the setter
+is provided, the property will be write-only.
+
+```cpp
+std::vector<std::string> free_jazz_musicians {"Albert Ayler", "Peter Brötzmann"};
+
+// Read/write property, because we're passing both a setter and a getter.
+object.add_property<std::vector<std::string>>(
+    "FreeJazzMusicians",
+    [&free_jazz_musicians] {
+        return free_jazz_musicians;
+    },
+    [&free_jazz_musicians](const std::vector<std::string>& new_value) {
+        free_jazz_musicians = new_value;
+        return true;
+    });
+```
+
+We can make that into a write-only property like this:
+
+```cpp
+// Write-only property.
+object.add_property<std::vector<std::string>>(
+    "FreeJazzMusicians",
+    {}, // No read (getter) function provided.
+    [&free_jazz_musicians](const std::vector<std::string>& new_value) {
+        free_jazz_musicians = new_value;
+        return true;
+    });
+```
 
 ### Starting the service
 
