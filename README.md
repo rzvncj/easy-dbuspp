@@ -11,6 +11,9 @@ The library has two major goals:
 
 If a missing feature collides with these two goals, it will stay missing.
 
+***Please note that this is still very much work in progress. Until version 1, the code may change
+considerably. API stability is not yet guaranteed.***
+
 ## Example usage
 
 The library provides the `easydbuspp.h` convenience header, which brings in everything you need to start
