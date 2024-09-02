@@ -196,6 +196,32 @@ try {
 }
 ```
 
+### Working with properties
+
+The proxy caches object properties upon initial connection. Reading a property thus
+retrieves it from the cache, which is convenient since it presupposes no expensive I/O:
+
+```cpp
+auto philosopher = proxy.cached_property<std::string>("GreatestPhilosopher");
+```
+
+The cache stays current for all remote objects that trigger the `"PropertiesChanged"`
+broadcast signal (which is almost everyone).
+
+We can set a property in our own cache (but this won't affect the remote object) like
+this:
+
+```cpp
+proxy.cached_property("ReadWriteStringProp", "New value");
+```
+
+If we _do_ want to affect the remote object, there's no way around an expensive proxy call
+to `org.freedesktop.DBus.Properties.Set`, but we can do that too:
+
+```cpp
+proxy.cached_property("ReadWriteStringProp", "Value to set on remote object");
+```
+
 ### Registering for a signal
 
 In order to be able to passively receive signals, an application needs to start running the
