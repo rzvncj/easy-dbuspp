@@ -115,6 +115,33 @@ object.add_property<std::vector<std::string>>(
     });
 ```
 
+### Registering signals
+
+Signals are similar to UDP packets. They belong to an interface, and can contain data (parameters).
+Emitting a signal is similar to calling a void "function" with parameters that are supposed to
+be sent out somewhere, but it may be received or not. If it's lost, it's lost (just like an UDP
+packet).
+
+The most common, and useful, type of signal is a broadcast signal. A broadcast signal is sent out
+to anyone who'll listen, on any bus.
+
+Here's how to add one to your object:
+
+```cpp
+auto broadcast_signal = object.add_broadcast_signal<int, std::string, float>("BroadcastSignal");
+
+object.add_method("TriggerBroadcastSignal", [&broadcast_signal] {
+    broadcast_signal(42, "Broadcast signal emitted!", 3.14f);
+});
+```
+
+The first line creates a broadcast signal named `"BroadcastSignal"`, taking parameters of type
+`int, std::string, float`. `add_broadcast_signal()` returns an
+`std::function<void(int, std::string, float>`, which is then used inside the new
+`"TriggerBroadcastSignal"` to emit the signal.
+
+So now every time `"TriggerBroadcastSignal"` is called, the signal gets sent out.
+
 ### Starting the service
 
 Now that our object has been set up, we can make it available by starting the main processing loop:
