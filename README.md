@@ -18,7 +18,7 @@ using it.
 
 Here's how we create a service:
 
-```c++
+```cpp
 easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION, "org.gtk.GDBus.Test"};
 easydbuspp::object object {session_manager, "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject"};
 ```
@@ -31,7 +31,7 @@ uses the `session_manager` instance, with a given interface name and a D-Bus obj
 Registering a method with the D-Bus `object` is as simple as using `object::add_method()` with the
 method name and a callable entity (lambda, functor object, regular function pointer).
 
-```c++
+```cpp
 object.add_method("MethodTakingAStringAndReturningBool",
                   [](const std::string& input) {
                       return input == "password";
@@ -47,7 +47,7 @@ value and sending it back to the caller. You don't have to know anyting else!
 Errors are simply reported by throwing an `std::exception`-derived exception. For example, say
 we don't want to accept empty strings as input to `MethodTakingAStringAndReturningBool`:
 
-```c++
+```cpp
 object.add_method("MethodTakingAStringAndReturningBool",
                   [](const std::string& input) {
                       if (input.empty())
@@ -66,7 +66,7 @@ what type a property is based on the type of the value provided (literals, `cons
 read-only properties automatically, while lvalues will be read-write properties
 automatically).
 
-```c++
+```cpp
 // Read-only property, because 42 is an int literal.
 object.add_property("TheAnswerToLifeTheUniverseAndEverything", 42);
 
@@ -88,7 +88,7 @@ Properties can also be registered by providing setter and getter callbacks.
 
 Now that our object has been set up, we can make it available by starting the main processing loop:
 
-```c++
+```cpp
 session_manager.run();
 ```
 
@@ -107,7 +107,7 @@ Now that we have a service up and running, we can connect to it using `easydbusp
 
 Here's how to set one up:
 
-```c++
+```cpp
 easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION};
 easydbuspp::proxy           proxy(session_manager, "org.gtk.GDBus.Test", "org.gtk.GDBus.TestInterface",
                                   "/org/gtk/GDBus/TestObject");
@@ -119,7 +119,7 @@ Calling methods is, well, easy. Just specify the return type you're expecting as
 parameter to `proxy::call()`, then the method name as the first parameter, followed by all the
 parameters the function expects:
 
-```c++
+```cpp
 // Result will be a bool.
 auto result = proxy.call<bool>("MethodTakingAStringAndReturningBool", "password");
 ```
@@ -130,7 +130,7 @@ Remember our method threw an `std::runtime_error` if it's parameter was an empty
 Well, that is magically turned into an `std::runtime_error` on the proxy side, so all we
 have to do to handle errors is enclose our `call()` in a `try / catch` block:
 
-```c++
+```cpp
 try {
     auto result = proxy.call<bool>("MethodTakingAStringAndReturningBool", "");
 } catch (const std::exception& e) {
