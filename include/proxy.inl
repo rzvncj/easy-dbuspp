@@ -49,6 +49,10 @@ T proxy::cached_property(const std::string& property_name) const
 {
     g_variant_ptr result {g_dbus_proxy_get_cached_property(proxy_, property_name.c_str()), g_variant_unref};
 
+    if (!result)
+        throw std::runtime_error("Property '" + property_name
+                                 + "' could not be read (doesn't exist or is write-only)!");
+
     return from_gvariant<T>(result.get());
 }
 

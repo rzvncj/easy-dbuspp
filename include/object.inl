@@ -163,14 +163,14 @@ void object::add_property(const std::string& name, T&& value)
     if constexpr (!is_output_type_v<T>) {
         property_xml += "read";
         properties_[name] = std::pair<property_read_handler_t, property_write_handler_t>(
-            [value]() {
+            [value] {
                 return to_gvariant(value);
             },
             {});
     } else {
         property_xml += "readwrite";
         properties_[name] = std::pair<property_read_handler_t, property_write_handler_t>(
-            [&value]() {
+            [&value] {
                 return to_gvariant(value);
             },
             [this, &value, name](GVariant* new_value) {
@@ -202,7 +202,7 @@ void object::add_property(const std::string& name, std::function<T()> getter, st
     property_xml += "'/>\n";
     properties_xml_ += property_xml;
 
-    auto read_lambda = [getter]() {
+    auto read_lambda = [getter] {
         return to_gvariant(getter());
     };
 
