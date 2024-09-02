@@ -196,7 +196,35 @@ try {
 }
 ```
 
-Getting the hang of the "easy" part of easy-dbuspp?
+### Registering for a signal
+
+In order to be able to passively receive signals, an application needs to start running the
+main processing loop. But before that, it should register for the signal, which, by now
+unsurprisingly, it can do by registering a callback:
+
+```cpp
+session_manager.signal_subscribe("BroadcastSignal", [&session_manager](int i, const std::string& s, float f) {
+    std::cout << "Got signal 'BroadcastSignal': [" << i << ", '" << s << "', " << f << "]\nExiting." << std::endl;
+    session_manager.stop();
+});
+```
+
+Then we could just run the main processing loop in a different thread:
+
+```cpp
+auto a = std::async(std::launch::async, [&session_manager] {
+    session_manager.run();
+});
+```
+
+leaving the main thread free to trigger the signal:
+
+```cpp
+proxy.call<void>("TriggerBroadcastSignal");
+```
+
+Once the signal is triggered, the callback is called, which stops the main thread loop,
+which allows the process to exit.
 
 ## Building
 
