@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <easydbuspp.h>
 #include <iostream>
 #include <map>
-#include <object.h>
-#include <session_manager.h>
 
 // A pair an a tuple are treated exactly the same. For the purposes of easy-dbuspp, a pair
 // is simply a tuple with two elements.
