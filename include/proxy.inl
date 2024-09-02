@@ -20,7 +20,7 @@
 namespace easydbuspp {
 
 template <typename R, typename... A>
-R proxy::call(const std::string& method_name, A... parameters)
+R proxy::call(const std::string& method_name, A... parameters) const
 {
     std::tuple<std::decay_t<A>...> fn_args {parameters...};
     GError*                        error {nullptr};

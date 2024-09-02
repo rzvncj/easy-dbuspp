@@ -4,6 +4,7 @@
 // Convenience header.
 
 #include "object.h"
+#include "org_freedesktop_dbus_proxy.h"
 #include "proxy.h"
 #include "session_manager.h"
 

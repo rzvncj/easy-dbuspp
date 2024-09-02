@@ -26,9 +26,16 @@ int main()
     using namespace std::chrono_literals;
 
     try {
+        const std::string BUS_NAME {"org.gtk.GDBus.Test"};
+
         easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION};
-        easydbuspp::proxy           proxy(session_manager, "org.gtk.GDBus.Test", "org.gtk.GDBus.TestInterface",
-                                          "/org/gtk/GDBus/TestObject");
+        easydbuspp::proxy proxy {session_manager, BUS_NAME, "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject"};
+
+        easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(session_manager);
+        std::string                            unique_bus_name = dbus_proxy.unique_bus_name(BUS_NAME);
+
+        std::cout << "** Bus UID: " << dbus_proxy.uid(BUS_NAME) << "\n** Service PID: " << dbus_proxy.pid(BUS_NAME)
+                  << std::endl;
 
         auto jazzman = proxy.call<std::string>("MostInterestingJazzMusician");
 
@@ -103,11 +110,6 @@ int main()
             std::cout << "Got signal BroadcastSignal: [" << i << ", '" << s << "', " << f << "]\nExiting." << std::endl;
             session_manager.stop();
         });
-
-        easydbuspp::proxy dbus_proxy(session_manager, "org.freedesktop.DBus", "org.freedesktop.DBus",
-                                     "/net/freedesktop/DBus");
-
-        auto unique_bus_name = dbus_proxy.call<std::string>("GetNameOwner", "org.gtk.GDBus.Test");
 
         session_manager.signal_subscribe(
             "UnicastSignal",

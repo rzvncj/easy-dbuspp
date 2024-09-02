@@ -33,7 +33,7 @@ class proxy {
 public:
     proxy(session_manager& session_manager, const std::string& bus_name, const std::string& interface_name,
           const object_path_t& object_path);
-    ~proxy();
+    virtual ~proxy();
 
     proxy(const proxy&)            = delete;
     proxy& operator=(const proxy&) = delete;
@@ -41,7 +41,7 @@ public:
     std::string unique_bus_name() const;
 
     template <typename R, typename... A>
-    R call(const std::string& method_name, A... parameters);
+    R call(const std::string& method_name, A... parameters) const;
 
     template <typename T>
     T cached_property(const std::string& property_name) const;
