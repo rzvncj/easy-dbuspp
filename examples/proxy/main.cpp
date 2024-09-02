@@ -26,7 +26,7 @@ int main()
     using namespace std::chrono_literals;
 
     try {
-        easydbuspp::session_manager session_manager {G_BUS_TYPE_SESSION};
+        easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION};
         easydbuspp::proxy           proxy(session_manager, "org.gtk.GDBus.Test", "org.gtk.GDBus.TestInterface",
                                           "/org/gtk/GDBus/TestObject");
 

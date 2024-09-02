@@ -30,13 +30,15 @@ namespace easydbuspp {
 class object;
 class proxy;
 
+enum class bus_type_t { SESSION, SYSTEM };
+
 class session_manager {
 
     using signal_handler_t = std::function<void(GVariant*)>;
 
 public:
-    session_manager(GBusType bus_type);
-    session_manager(GBusType bus_type, const std::string& bus_name);
+    session_manager(bus_type_t bus_type);
+    session_manager(bus_type_t bus_type, const std::string& bus_name);
     ~session_manager();
 
     session_manager(const session_manager&)            = delete;

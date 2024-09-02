@@ -18,15 +18,29 @@
 #include "object.h"
 #include <glib-unix.h>
 
-#include <iostream>
+namespace {
+
+inline GBusType to_g_bus_type(easydbuspp::bus_type_t bus_type)
+{
+    switch (bus_type) {
+    case easydbuspp::bus_type_t::SESSION:
+        return G_BUS_TYPE_SESSION;
+    case easydbuspp::bus_type_t::SYSTEM:
+        return G_BUS_TYPE_SYSTEM;
+    }
+
+    throw std::runtime_error("Unkown bus type - this should never happen.");
+}
+
+} // end of anonymous namespace
 
 namespace easydbuspp {
 
-session_manager::session_manager(GBusType bus_type)
+session_manager::session_manager(bus_type_t bus_type)
 {
     GError* error {nullptr};
 
-    connection_ = g_bus_get_sync(bus_type, nullptr, &error);
+    connection_ = g_bus_get_sync(to_g_bus_type(bus_type), nullptr, &error);
 
     if (!connection_) {
         std::string error_message = error->message;
@@ -36,11 +50,11 @@ session_manager::session_manager(GBusType bus_type)
     }
 }
 
-session_manager::session_manager(GBusType bus_type, const std::string& bus_name)
+session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name)
 {
     bus_name_ = bus_name;
     owner_id_ = g_bus_own_name(
-        bus_type, bus_name.c_str(),
+        to_g_bus_type(bus_type), bus_name.c_str(),
         static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
         on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr);
 }

@@ -19,7 +19,7 @@ using it.
 Here's how we create a service:
 
 ```c++
-easydbuspp::session_manager session_manager {G_BUS_TYPE_SESSION, "org.gtk.GDBus.Test"};
+easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION, "org.gtk.GDBus.Test"};
 easydbuspp::object object {session_manager, "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject"};
 ```
 
@@ -108,7 +108,7 @@ Now that we have a service up and running, we can connect to it using `easydbusp
 Here's how to set one up:
 
 ```c++
-easydbuspp::session_manager session_manager {G_BUS_TYPE_SESSION};
+easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION};
 easydbuspp::proxy           proxy(session_manager, "org.gtk.GDBus.Test", "org.gtk.GDBus.TestInterface",
                                   "/org/gtk/GDBus/TestObject");
 ```
