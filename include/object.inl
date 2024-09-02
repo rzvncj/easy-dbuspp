@@ -199,6 +199,9 @@ void object::add_property(const std::string& name, std::function<T()> getter, st
     else
         property_xml += "readwrite";
 
+    property_xml += "'/>\n";
+    properties_xml_ += property_xml;
+
     auto read_lambda = [getter]() {
         return to_gvariant(getter());
     };
@@ -211,9 +214,6 @@ void object::add_property(const std::string& name, std::function<T()> getter, st
 
     properties_[name] = std::make_pair(getter ? read_lambda : property_read_handler_t {},
                                        setter ? write_lambda : property_write_handler_t {});
-
-    property_xml += "'/>\n";
-    properties_xml_ += property_xml;
 }
 
 } // end of namespace easydbuspp
