@@ -32,7 +32,7 @@ class org_freedesktop_dbus_proxy : public proxy {
 
 public:
     //! Constructor. Connects to D-Bus via the session_manager's connection.
-    org_freedesktop_dbus_proxy(session_manager& session_mgr);
+    explicit org_freedesktop_dbus_proxy(session_manager& session_mgr);
 
 public:
     //! Get the unique bus name of a well-known bus name.

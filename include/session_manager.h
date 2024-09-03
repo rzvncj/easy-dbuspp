@@ -48,7 +48,7 @@ public:
      *
      * @param bus_type Which bus to connect to (the session or system bus).
      */
-    session_manager(bus_type_t bus_type);
+    explicit session_manager(bus_type_t bus_type);
 
     /*!
      * Constructor. This connects to the D-Bus to request a bus name.

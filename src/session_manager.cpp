@@ -50,9 +50,8 @@ session_manager::session_manager(bus_type_t bus_type)
     }
 }
 
-session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name)
+session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name) : bus_name_ {bus_name}
 {
-    bus_name_ = bus_name;
     owner_id_ = g_bus_own_name(
         to_g_bus_type(bus_type), bus_name.c_str(),
         static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),

@@ -42,3 +42,8 @@ executable('dbus-test-proxy',
    ],
    link_with: easy_dbuspp
 )
+
+run_target('cppcheck', command : ['cppcheck', '--enable=all',
+   '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
+   '--suppress=unusedFunction', '--check-level=exhaustive',
+   '--project=' + join_paths(meson.project_build_root(), 'compile_commands.json')])
