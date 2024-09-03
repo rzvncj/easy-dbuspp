@@ -9,7 +9,7 @@ The library has two major goals:
 * Use regular, run-of-the-mill modern C++ and its standard types to abstract away almost all of D-Bus.
 * Keep usage as simple as possible.
 
-If a missing feature collides with these two goals, it will stay missing.
+If a missing feature conflicts with these two goals, it will stay missing.
 
 ***Please note that this is still very much work in progress. Until version 1, the code may change
 considerably. API stability is not yet guaranteed.***
