@@ -38,11 +38,11 @@ public:
     //! Get the unique bus name of a well-known bus name.
     std::string unique_bus_name(const std::string& well_known_bus_name) const;
 
-    //! Get the UID of the process that owns `well_known_bus_name`.
-    uid_t uid(const std::string& well_known_bus_name) const;
+    //! Get the UID of the process that owns `bus_name`.
+    uid_t uid(const std::string& bus_name) const;
 
-    //! Get the PID of the process that owns `well_known_bus_name`.
-    uid_t pid(const std::string& well_known_bus_name) const;
+    //! Get the PID of the process that owns `bus_name`.
+    uid_t pid(const std::string& bus_name) const;
 };
 
 } // end of namespace easydbuspp

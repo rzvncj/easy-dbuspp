@@ -41,6 +41,13 @@ class object {
     using property_write_handler_t = std::function<gboolean(GVariant*)>;
 
 public:
+    //! Used in (optional) pre-request handlers.
+    enum class request_type { METHOD, GET_PROPERTY, SET_PROPERTY };
+
+    //! Type to which all pre-request handler callbacks must conform.
+    using pre_request_handler_t = std::function<void(request_type, const std::string&, const std::string&)>;
+
+public:
     /*!
      * Constructor.
      *
@@ -107,7 +114,8 @@ public:
      *               will try to set the variable.
      */
     template <typename T>
-    void add_property(const std::string& name, std::function<T()> getter, std::function<bool(const T&)> setter);
+    void add_property(const std::string& name, const std::function<T()>& getter,
+                      const std::function<bool(const T&)>& setter);
 
     /*!
      * Add a broadcast signal (generates XML introspection data as well). Broadcast signals are sent to
@@ -151,6 +159,17 @@ public:
     template <typename... A>
     std::function<void(const std::string&, A...)>
     add_unicast_signal(const std::string& name, const std::vector<std::string>& argument_names = {});
+
+    /*!
+     * Add a pre-request handler function. This function (if added) will run before a method call, or
+     * a property set or get operation. The parameters to the function will be: request type, sender
+     * (as in the bus name of the sender), and name (method name for methods, property name for
+     * properties). If processing the current method or property need to be denied, throw an
+     * std::exception-derived exception from the handler.
+     *
+     * @param handler Callback to invoke before any method call, setting or getting a property value.
+     */
+    void pre_request_handler(const pre_request_handler_t& handler);
 
     //! Returns this object's interface name.
     std::string interface_name() const;
@@ -201,6 +220,7 @@ private:
     static inline asio::thread_pool                                                               thread_pool_;
     static inline const GDBusInterfaceVTable                                                      interface_vtable_ {
         handle_method_call, handle_get_property, handle_set_property, {}};
+    pre_request_handler_t pre_request_handler_;
 
     friend class session_manager;
 };

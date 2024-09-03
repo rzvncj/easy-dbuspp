@@ -29,14 +29,14 @@ std::string org_freedesktop_dbus_proxy::unique_bus_name(const std::string& well_
     return call<std::string>("GetNameOwner", well_known_bus_name);
 }
 
-uid_t org_freedesktop_dbus_proxy::uid(const std::string& well_known_bus_name) const
+uid_t org_freedesktop_dbus_proxy::uid(const std::string& bus_name) const
 {
-    return call<uint32_t>("GetConnectionUnixUser", well_known_bus_name);
+    return call<uint32_t>("GetConnectionUnixUser", bus_name);
 }
 
-uid_t org_freedesktop_dbus_proxy::pid(const std::string& well_known_bus_name) const
+uid_t org_freedesktop_dbus_proxy::pid(const std::string& bus_name) const
 {
-    return call<uint32_t>("GetConnectionUnixProcessID", well_known_bus_name);
+    return call<uint32_t>("GetConnectionUnixProcessID", bus_name);
 }
 
 } // end of namespace easydbuspp

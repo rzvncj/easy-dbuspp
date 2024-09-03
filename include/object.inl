@@ -185,7 +185,8 @@ void object::add_property(const std::string& name, T&& value)
 }
 
 template <typename T>
-void object::add_property(const std::string& name, std::function<T()> getter, std::function<bool(const T&)> setter)
+void object::add_property(const std::string& name, const std::function<T()>& getter,
+                          const std::function<bool(const T&)>& setter)
 {
     if (!setter && !getter)
         throw std::runtime_error("Property '" + name + "': needs to provide at least a setter or a getter!");

@@ -47,6 +47,11 @@ object_path_t object::object_path() const
     return object_path_;
 }
 
+void object::pre_request_handler(const pre_request_handler_t& handler)
+{
+    pre_request_handler_ = handler;
+}
+
 void object::connect()
 {
     if (!session_manager_.connection_)
@@ -79,9 +84,9 @@ void object::disconnect()
     session_manager_.connection_ = nullptr;
 }
 
-void object::handle_method_call(GDBusConnection* /* connection */, const gchar* /* sender */,
-                                const gchar* /* object_path */, const gchar* interface_name, const gchar* method_name,
-                                GVariant* parameters, GDBusMethodInvocation* invocation, gpointer user_data)
+void object::handle_method_call(GDBusConnection* /* connection */, const gchar* sender, const gchar* /* object_path */,
+                                const gchar* interface_name, const gchar* method_name, GVariant* parameters,
+                                GDBusMethodInvocation* invocation, gpointer user_data)
 {
     using namespace std::string_literals;
 
@@ -95,6 +100,9 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
                 throw std::runtime_error("No method '"s + method_name + "' registered by object '"
                                          + obj_ptr->object_path_.generic_string() + "'!");
 
+            if (obj_ptr->pre_request_handler_)
+                obj_ptr->pre_request_handler_(request_type::METHOD, sender, method_name);
+
             GVariant* ret = it->second(parameters);
             g_dbus_method_invocation_return_value(invocation, ret);
 
@@ -105,7 +113,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
     });
 }
 
-GVariant* object::handle_get_property(GDBusConnection* /* connection */, const gchar* /* sender */,
+GVariant* object::handle_get_property(GDBusConnection* /* connection */, const gchar* sender,
                                       const gchar* /* object_path */, const gchar* /* interface_name */,
                                       const gchar* property_name, GError** error, gpointer user_data)
 {
@@ -126,6 +134,9 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
             throw std::runtime_error("Property '"s + property_name + "' for object '"
                                      + obj_ptr->object_path_.generic_string() + "' cannot be read!");
 
+        if (obj_ptr->pre_request_handler_)
+            obj_ptr->pre_request_handler_(request_type::GET_PROPERTY, sender, property_name);
+
         return getter();
 
     } catch (const std::exception& e) {
@@ -134,7 +145,7 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
     }
 }
 
-gboolean object::handle_set_property(GDBusConnection* /* connection */, const gchar* /* sender */,
+gboolean object::handle_set_property(GDBusConnection* /* connection */, const gchar* sender,
                                      const gchar* /* object_path */, const gchar* /* interface_name */,
                                      const gchar* property_name, GVariant* value, GError** error, gpointer user_data)
 {
@@ -154,6 +165,9 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
         if (!setter)
             throw std::runtime_error("Property '"s + property_name + "' for object '"
                                      + obj_ptr->object_path_.generic_string() + "' is read only!");
+
+        if (obj_ptr->pre_request_handler_)
+            obj_ptr->pre_request_handler_(request_type::SET_PROPERTY, sender, property_name);
 
         return setter(value);
 
