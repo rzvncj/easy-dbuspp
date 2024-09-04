@@ -164,7 +164,7 @@ public:
      * Add a pre-request handler function. This function (if added) will run before a method call, or
      * a property set or get operation. The parameters to the function will be: request type, sender
      * (as in the bus name of the sender), and name (method name for methods, property name for
-     * properties). If processing the current method or property need to be denied, throw an
+     * properties). If processing the current method or property needs to be denied, throw an
      * std::exception-derived exception from the handler.
      *
      * @param handler Callback to invoke before any method call, setting or getting a property value.
