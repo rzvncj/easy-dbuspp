@@ -17,10 +17,10 @@
 #ifndef __OBJECT_H_INCLUDED__
 #define __OBJECT_H_INCLUDED__
 
+#include "g_thread_pool.h"
 #include "params.h"
 #include "type_mapping.h"
 #include "types.h"
-#include <asio.hpp>
 #include <cstdlib>
 #include <functional>
 #include <utility>
@@ -206,6 +206,8 @@ private:
                                         const gchar* interface_name, const gchar* property_name, GVariant* value,
                                         GError** error, gpointer user_data);
 
+    static void g_thread_pool_function(gpointer data, gpointer user_data);
+
 private:
     session_manager&                                                                              session_manager_;
     guint                                                                                         registration_id_ {0};
@@ -217,10 +219,10 @@ private:
     std::unordered_map<std::string, method_handler_t>                                             methods_;
     std::unordered_map<std::string, std::pair<property_read_handler_t, property_write_handler_t>> properties_;
     g_dbus_node_info_ptr                                                                          introspection_data_;
-    static inline asio::thread_pool                                                               thread_pool_;
+    static g_thread_pool                                                                          thread_pool_;
+    pre_request_handler_t                                                                         pre_request_handler_;
     static inline const GDBusInterfaceVTable                                                      interface_vtable_ {
         handle_method_call, handle_get_property, handle_set_property, {}};
-    pre_request_handler_t pre_request_handler_;
 
     friend class session_manager;
 };

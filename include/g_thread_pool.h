@@ -14,29 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <org_freedesktop_dbus_proxy.h>
-#include <stdexcept>
+#ifndef __G_THREAD_POOL_H_INCLUDED__
+#define __G_THREAD_POOL_H_INCLUDED__
+
+#include <glib.h>
 
 namespace easydbuspp {
 
-org_freedesktop_dbus_proxy::org_freedesktop_dbus_proxy(session_manager& session_mgr)
-    : proxy(session_mgr, "org.freedesktop.DBus", "org.freedesktop.DBus", "/net/freedesktop/DBus")
-{
-}
+class g_thread_pool {
 
-std::string org_freedesktop_dbus_proxy::unique_bus_name(const std::string& well_known_bus_name) const
-{
-    return call<std::string>("GetNameOwner", well_known_bus_name);
-}
+public:
+    g_thread_pool(GFunc func);
+    ~g_thread_pool();
 
-uid_t org_freedesktop_dbus_proxy::uid(const std::string& bus_name) const
-{
-    return call<uint32_t>("GetConnectionUnixUser", bus_name);
-}
+    g_thread_pool(const g_thread_pool&)            = delete;
+    g_thread_pool& operator=(const g_thread_pool&) = delete;
 
-uid_t org_freedesktop_dbus_proxy::pid(const std::string& bus_name) const
-{
-    return call<uint32_t>("GetConnectionUnixProcessID", bus_name);
-}
+    void push(gpointer data);
+
+private:
+    GThreadPool* pool_ {nullptr};
+};
 
 } // end of namespace easydbuspp
+
+#endif // __G_THREAD_POOL_H_INCLUDED__

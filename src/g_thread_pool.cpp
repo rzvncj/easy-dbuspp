@@ -14,29 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <org_freedesktop_dbus_proxy.h>
+#include <g_thread_pool.h>
 #include <stdexcept>
 
 namespace easydbuspp {
 
-org_freedesktop_dbus_proxy::org_freedesktop_dbus_proxy(session_manager& session_mgr)
-    : proxy(session_mgr, "org.freedesktop.DBus", "org.freedesktop.DBus", "/net/freedesktop/DBus")
+g_thread_pool::g_thread_pool(GFunc func)
 {
+    pool_ = g_thread_pool_new(func, nullptr, g_get_num_processors(), TRUE, nullptr);
 }
 
-std::string org_freedesktop_dbus_proxy::unique_bus_name(const std::string& well_known_bus_name) const
+g_thread_pool::~g_thread_pool()
 {
-    return call<std::string>("GetNameOwner", well_known_bus_name);
+    g_thread_pool_free(pool_, TRUE, TRUE);
 }
 
-uid_t org_freedesktop_dbus_proxy::uid(const std::string& bus_name) const
+void g_thread_pool::push(gpointer data)
 {
-    return call<uint32_t>("GetConnectionUnixUser", bus_name);
-}
+    GError* error {nullptr};
 
-uid_t org_freedesktop_dbus_proxy::pid(const std::string& bus_name) const
-{
-    return call<uint32_t>("GetConnectionUnixProcessID", bus_name);
+    if (!g_thread_pool_push(pool_, data, &error)) {
+        std::string error_message = error->message;
+        g_error_free(error);
+
+        throw std::runtime_error("Could not push data to thread pool: " + error_message);
+    }
 }
 
 } // end of namespace easydbuspp

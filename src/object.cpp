@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "object.h"
+#include <object.h>
 #include <stdexcept>
 
 namespace easydbuspp {
+
+g_thread_pool object::thread_pool_ {g_thread_pool_function};
 
 object::object(session_manager& session_mgr, const std::string& interface_name, const object_path_t& object_path)
     : session_manager_ {session_mgr}, interface_name_ {interface_name}, object_path_ {object_path},
@@ -90,7 +92,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 {
     using namespace std::string_literals;
 
-    asio::post(thread_pool_, [=] {
+    thread_pool_.push(new std::function<void()> {[=] {
         try {
             object* obj_ptr = static_cast<object*>(user_data);
 
@@ -110,7 +112,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
             const std::string error_name {std::string {interface_name} + ".MethodError"};
             g_dbus_method_invocation_return_dbus_error(invocation, error_name.c_str(), e.what());
         }
-    });
+    }});
 }
 
 GVariant* object::handle_get_property(GDBusConnection* /* connection */, const gchar* sender,
@@ -175,6 +177,14 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
         g_set_error(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED, "%s", e.what());
         return FALSE;
     }
+}
+
+void object::g_thread_pool_function(gpointer data, gpointer /* user_data */)
+{
+    using threadpool_fn_t = std::function<void()>;
+
+    std::unique_ptr<threadpool_fn_t> method_ptr {static_cast<threadpool_fn_t*>(data)};
+    (*method_ptr)();
 }
 
 void object::emit_properties_update_signal(const std::string& property_name, GVariant* value) const

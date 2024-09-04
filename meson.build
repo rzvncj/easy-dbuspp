@@ -6,12 +6,12 @@ project('easy-dbuspp',
     meson_version: '>= 0.58')
 
 dep_gio = dependency('gio-2.0')
-dep_asio = dependency('asio')
 
 incdir = include_directories('include')
 
 easy_dbuspp = library('easy-dbuspp',
    [
+      'src/g_thread_pool.cpp',
       'src/object.cpp',
       'src/proxy.cpp',
       'src/org_freedesktop_dbus_proxy.cpp',
@@ -20,7 +20,6 @@ easy_dbuspp = library('easy-dbuspp',
    include_directories: incdir,
    dependencies: [
       dep_gio,
-      dep_asio,
    ],
    install : true
 )

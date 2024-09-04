@@ -119,8 +119,9 @@ int main()
             [&session_manager](easydbuspp::object::request_type, const std::string& sender, const std::string& name) {
                 easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(session_manager);
 
-                std::cout << "sender: " << sender << ", name: '" << name << "', sender PID: " << dbus_proxy.pid(sender)
-                          << ", sender UID: " << dbus_proxy.uid(sender) << std::endl;
+                std::cout << "[pre-request check] sender: " << sender << ", name: '" << name
+                          << "', sender PID: " << dbus_proxy.pid(sender) << ", sender UID: " << dbus_proxy.uid(sender)
+                          << std::endl;
             });
 
         session_manager.run();

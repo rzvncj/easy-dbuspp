@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "session_manager.h"
-#include "object.h"
 #include <glib-unix.h>
+#include <object.h>
+#include <session_manager.h>
 
 namespace {
 
