@@ -107,6 +107,17 @@ public:
     template <typename T>
     void property(const std::string& property_name, const T& new_value);
 
+    /*!
+     * Gets a property directly from the remote-object (not from the cache).
+     *
+     * This is expensive, because it incurs a proxy call to `org.freedesktop.DBus.Properties.Get`.
+     *
+     * @param property_name The name of the property we want to query.
+     * @return The value of the requested property.
+     */
+    template <typename T>
+    T property(const std::string& property_name) const;
+
 private:
     session_manager& session_manager_;
     std::string      bus_name_;

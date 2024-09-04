@@ -69,6 +69,13 @@ void proxy::property(const std::string& property_name, const T& new_value)
     props_proxy.call<void>("Set", interface_name_, property_name, std::variant<T> {new_value});
 }
 
+template <typename T>
+T proxy::property(const std::string& property_name) const
+{
+    proxy props_proxy {session_manager_, bus_name_, "org.freedesktop.DBus.Properties", object_path_};
+    return std::get<0>(props_proxy.call<std::variant<T>>("Get", interface_name_, property_name));
+}
+
 } // end of namespace easydbuspp
 
 #endif // __PROXY_INL_INCLUDED__
