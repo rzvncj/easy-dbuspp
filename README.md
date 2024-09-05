@@ -267,6 +267,11 @@ meson compile
 
 * [glib-2](https://docs.gtk.org/glib/) - D-Bus implementation
 
+## Thanks
+
+Special thanks to David Sommerseth, author of [gdbuspp](https://codeberg.org/OpenVPN/gdbuspp) for inspiration and
+encouragement!
+
 ## Authors
 
 * **Răzvan Cojocaru** [rzvncj](https://github.com/rzvncj)
