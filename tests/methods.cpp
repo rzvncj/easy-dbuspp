@@ -37,10 +37,13 @@ auto square_int_values(const dictionary_type_t& m)
 int main()
 {
     try {
+        const std::string               BUS_NAME {"net.test.EasyDBuspp.Test"};
+        const std::string               INTERFACE_NAME {"net.test.EasyDBuspp.TestInterface"};
+        const easydbuspp::object_path_t OBJECT_PATH {"/net/test/EasyDBuspp/TestObject"};
+
         // Set up an object.
-        easydbuspp::session_manager obj_session_manager {easydbuspp::bus_type_t::SESSION, "net.test.EasyDBuspp.Test"};
-        easydbuspp::object          object {obj_session_manager, "net.test.EasyDBuspp.TestInterface",
-                                   "/net/test/EasyDBuspp/TestObject"};
+        easydbuspp::session_manager obj_session_manager {easydbuspp::bus_type_t::SESSION, BUS_NAME};
+        easydbuspp::object          object {obj_session_manager, INTERFACE_NAME, OBJECT_PATH};
 
         object.add_method("VoidPlainFunctionReturningVoid", f);
 
@@ -77,8 +80,7 @@ int main()
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
-        easydbuspp::proxy proxy(proxy_session_manager, "net.test.EasyDBuspp.Test", "net.test.EasyDBuspp.TestInterface",
-                                "/net/test/EasyDBuspp/TestObject");
+        easydbuspp::proxy           proxy {proxy_session_manager, BUS_NAME, INTERFACE_NAME, OBJECT_PATH};
 
         proxy.call<void>("VoidPlainFunctionReturningVoid");
 

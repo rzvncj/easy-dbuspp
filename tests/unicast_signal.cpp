@@ -14,10 +14,10 @@ int main()
         easydbuspp::session_manager obj_session_manager {easydbuspp::bus_type_t::SESSION, BUS_NAME};
         easydbuspp::object          object {obj_session_manager, INTERFACE_NAME, OBJECT_PATH};
 
-        auto broadcast_signal = object.add_broadcast_signal<std::string, double>("BroadcastSignal");
+        auto unicast_signal = object.add_unicast_signal<std::string>("UnicastSignal");
 
-        object.add_method("EmitBroadcastSignal", [&broadcast_signal] {
-            broadcast_signal("Done calculating PI, here's the value", 3.14);
+        object.add_method("EmitUnicastSignal", [&unicast_signal](const std::string& bus_name) {
+            unicast_signal(bus_name, "Unicast signal emitted!");
         });
 
         auto obj_a = std::async(std::launch::async, [&obj_session_manager] {
@@ -28,17 +28,22 @@ int main()
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
         easydbuspp::proxy           proxy {proxy_session_manager, BUS_NAME, INTERFACE_NAME, OBJECT_PATH};
 
+        easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(proxy_session_manager);
+        std::string                            unique_bus_name = dbus_proxy.unique_bus_name(BUS_NAME);
+
         proxy_session_manager.signal_subscribe(
-            "BroadcastSignal", [&proxy_session_manager](const std::string& s, double d) {
-                std::cout << "Got signal BroadcastSignal: [" << s << "', " << d << "]" << std::endl;
+            "UnicastSignal",
+            [&proxy_session_manager](const std::string& s) {
+                std::cout << "Got signal UnicastSignal: ['" << s << "']" << std::endl;
                 proxy_session_manager.stop();
-            });
+            },
+            unique_bus_name, INTERFACE_NAME, OBJECT_PATH);
 
         auto proxy_a = std::async(std::launch::async, [&proxy_session_manager] {
             proxy_session_manager.run();
         });
 
-        proxy.call<void>("EmitBroadcastSignal");
+        proxy.call<void>("EmitUnicastSignal", proxy.unique_bus_name());
 
         obj_session_manager.stop();
 

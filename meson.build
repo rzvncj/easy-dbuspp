@@ -82,6 +82,16 @@ test_broadcast_signal = executable('broadcast_signal',
 )
 test('broadcast_signal', test_broadcast_signal, is_parallel: false)
 
+test_unicast_signal = executable('unicast_signal',
+   'tests/unicast_signal.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+   ],
+   link_with: easy_dbuspp
+)
+test('unicast_signal', test_unicast_signal, is_parallel: false)
+
 run_target('cppcheck', command : ['cppcheck', '--enable=all',
    '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
    '--suppress=unusedFunction', '--check-level=exhaustive',
