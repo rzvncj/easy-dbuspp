@@ -24,24 +24,6 @@ easy_dbuspp = library('easy-dbuspp',
    install : true
 )
 
-executable('dbus-test-service',
-   'examples/service/main.cpp',
-   include_directories: incdir,
-   dependencies: [
-      dep_gio,
-   ],
-   link_with: easy_dbuspp
-)
-
-executable('dbus-test-proxy',
-   'examples/proxy/main.cpp',
-   include_directories: incdir,
-   dependencies: [
-      dep_gio,
-   ],
-   link_with: easy_dbuspp
-)
-
 test_methods = executable('methods',
    'tests/methods.cpp',
    include_directories: incdir,
