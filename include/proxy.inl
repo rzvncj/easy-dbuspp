@@ -66,7 +66,11 @@ template <typename T>
 void proxy::property(const std::string& property_name, const T& new_value)
 {
     proxy props_proxy {session_manager_, bus_name_, "org.freedesktop.DBus.Properties", object_path_};
-    props_proxy.call<void>("Set", interface_name_, property_name, std::variant<T> {new_value});
+
+    if constexpr (decay_same_v<T, char*>)
+        props_proxy.call<void>("Set", interface_name_, property_name, std::variant<std::string> {new_value});
+    else
+        props_proxy.call<void>("Set", interface_name_, property_name, std::variant<T> {new_value});
 }
 
 template <typename T>

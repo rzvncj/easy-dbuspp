@@ -53,6 +53,17 @@ test_methods = executable('methods',
 
 test('methods', test_methods)
 
+test_properties = executable('properties',
+   'tests/properties.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+   ],
+   link_with: easy_dbuspp
+)
+
+test('properties', test_properties)
+
 run_target('cppcheck', command : ['cppcheck', '--enable=all',
    '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
    '--suppress=unusedFunction', '--check-level=exhaustive',
