@@ -6,6 +6,7 @@ project('easy-dbuspp',
     meson_version: '>= 0.58')
 
 dep_gio = dependency('gio-2.0')
+dep_threads = dependency('threads')
 
 incdir = include_directories('include')
 
@@ -20,6 +21,7 @@ easy_dbuspp = library('easy-dbuspp',
    include_directories: incdir,
    dependencies: [
       dep_gio,
+      dep_threads,
    ],
    install : true
 )
@@ -29,6 +31,7 @@ test_methods = executable('methods',
    include_directories: incdir,
    dependencies: [
       dep_gio,
+      dep_threads,
    ],
    link_with: easy_dbuspp
 )
@@ -39,6 +42,7 @@ test_properties = executable('properties',
    include_directories: incdir,
    dependencies: [
       dep_gio,
+      dep_threads,
    ],
    link_with: easy_dbuspp
 )
@@ -49,6 +53,7 @@ test_pre_request_handler = executable('pre_request_handler',
    include_directories: incdir,
    dependencies: [
       dep_gio,
+      dep_threads,
    ],
    link_with: easy_dbuspp
 )
@@ -59,6 +64,7 @@ test_broadcast_signal = executable('broadcast_signal',
    include_directories: incdir,
    dependencies: [
       dep_gio,
+      dep_threads,
    ],
    link_with: easy_dbuspp
 )
@@ -69,6 +75,7 @@ test_unicast_signal = executable('unicast_signal',
    include_directories: incdir,
    dependencies: [
       dep_gio,
+      dep_threads,
    ],
    link_with: easy_dbuspp
 )
