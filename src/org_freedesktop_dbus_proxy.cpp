@@ -34,7 +34,7 @@ uid_t org_freedesktop_dbus_proxy::uid(const std::string& bus_name) const
     return call<uint32_t>("GetConnectionUnixUser", bus_name);
 }
 
-uid_t org_freedesktop_dbus_proxy::pid(const std::string& bus_name) const
+pid_t org_freedesktop_dbus_proxy::pid(const std::string& bus_name) const
 {
     return call<uint32_t>("GetConnectionUnixProcessID", bus_name);
 }

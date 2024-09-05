@@ -42,7 +42,7 @@ public:
     uid_t uid(const std::string& bus_name) const;
 
     //! Get the PID of the process that owns `bus_name`.
-    uid_t pid(const std::string& bus_name) const;
+    pid_t pid(const std::string& bus_name) const;
 };
 
 } // end of namespace easydbuspp

@@ -50,8 +50,7 @@ test_methods = executable('methods',
    ],
    link_with: easy_dbuspp
 )
-
-test('methods', test_methods)
+test('methods', test_methods, is_parallel: false)
 
 test_properties = executable('properties',
    'tests/properties.cpp',
@@ -61,8 +60,18 @@ test_properties = executable('properties',
    ],
    link_with: easy_dbuspp
 )
+test('properties', test_properties, is_parallel: false)
 
-test('properties', test_properties)
+test_pre_request_handler = executable('pre_request_handler',
+   'tests/pre_request_handler.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+   ],
+   link_with: easy_dbuspp
+)
+test('pre_request_handler', test_pre_request_handler, is_parallel: false)
+
 
 run_target('cppcheck', command : ['cppcheck', '--enable=all',
    '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
