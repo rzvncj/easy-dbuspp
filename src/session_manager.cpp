@@ -60,6 +60,8 @@ session_manager::session_manager(bus_type_t bus_type, const std::string& bus_nam
 
 session_manager::~session_manager()
 {
+    stop();
+
     if (connection_) {
         for (auto&& object_ptr : objects_)
             object_ptr->disconnect();
@@ -70,8 +72,6 @@ session_manager::~session_manager()
 
     if (connection_)
         g_object_unref(connection_);
-
-    stop();
 }
 
 void session_manager::run()

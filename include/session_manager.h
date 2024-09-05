@@ -110,7 +110,7 @@ private:
 
 private:
     guint                                             owner_id_ {0};
-    static inline GMainLoop*                          loop_ {nullptr};
+    GMainLoop*                                        loop_ {nullptr};
     std::string                                       bus_name_;
     std::unordered_set<object*>                       objects_;
     std::unordered_map<std::string, signal_handler_t> signal_handlers_;
