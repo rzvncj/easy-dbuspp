@@ -265,6 +265,12 @@ cd build
 meson compile
 ```
 
+Running the automated unit tests (optional), from the `build` directory:
+
+```
+meson test
+```
+
 ## Built with
 
 * [glib-2](https://docs.gtk.org/glib/) - D-Bus implementation

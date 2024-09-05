@@ -137,6 +137,8 @@ int main()
         if (!exception_caught)
             throw std::runtime_error("'ThrowException' should have thrown an exception but didn't!");
 
+        obj_session_manager.stop();
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;

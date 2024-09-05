@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <easydbuspp.h>
 #include <future>
 #include <iostream>
@@ -44,6 +43,8 @@ int main()
                                 "/net/test/EasyDBuspp/TestObject");
 
         proxy.call<void>("DummyMethod");
+
+        obj_session_manager.stop();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

@@ -111,6 +111,8 @@ int main()
         if (it1 == rw_prop_ret3.end() || it2 == rw_prop_ret3.end())
             throw std::runtime_error("'FreeJazzMusicians' (method read) is not the expected value!");
 
+        obj_session_manager.stop();
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;

@@ -72,6 +72,15 @@ test_pre_request_handler = executable('pre_request_handler',
 )
 test('pre_request_handler', test_pre_request_handler, is_parallel: false)
 
+test_broadcast_signal = executable('broadcast_signal',
+   'tests/broadcast_signal.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+   ],
+   link_with: easy_dbuspp
+)
+test('broadcast_signal', test_broadcast_signal, is_parallel: false)
 
 run_target('cppcheck', command : ['cppcheck', '--enable=all',
    '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
