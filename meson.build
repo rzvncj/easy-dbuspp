@@ -42,6 +42,17 @@ executable('dbus-test-proxy',
    link_with: easy_dbuspp
 )
 
+test_methods = executable('methods',
+   'tests/methods.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+   ],
+   link_with: easy_dbuspp
+)
+
+test('methods', test_methods)
+
 run_target('cppcheck', command : ['cppcheck', '--enable=all',
    '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
    '--suppress=unusedFunction', '--check-level=exhaustive',

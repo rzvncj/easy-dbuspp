@@ -70,6 +70,8 @@ session_manager::~session_manager()
 
     if (connection_)
         g_object_unref(connection_);
+
+    stop();
 }
 
 void session_manager::run()
