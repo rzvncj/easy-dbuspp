@@ -40,7 +40,7 @@ int main()
         // Set up an object.
         easydbuspp::session_manager obj_session_manager {easydbuspp::bus_type_t::SESSION, "net.test.EasyDBuspp.Test"};
         easydbuspp::object          object {obj_session_manager, "net.test.EasyDBuspp.TestInterface",
-                                   "/net/test/EasyDBuspp/Test"};
+                                   "/net/test/EasyDBuspp/TestObject"};
 
         object.add_method("VoidPlainFunctionReturningVoid", f);
 
@@ -78,7 +78,7 @@ int main()
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
         easydbuspp::proxy proxy(proxy_session_manager, "net.test.EasyDBuspp.Test", "net.test.EasyDBuspp.TestInterface",
-                                "/net/test/EasyDBuspp/Test");
+                                "/net/test/EasyDBuspp/TestObject");
 
         proxy.call<void>("VoidPlainFunctionReturningVoid");
 

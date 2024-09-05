@@ -9,7 +9,7 @@ int main()
         // Set up an object.
         easydbuspp::session_manager obj_session_manager {easydbuspp::bus_type_t::SESSION, "net.test.EasyDBuspp.Test"};
         easydbuspp::object          object {obj_session_manager, "net.test.EasyDBuspp.TestInterface",
-                                   "/net/test/EasyDBuspp/Test"};
+                                   "/net/test/EasyDBuspp/TestObject"};
 
         object.add_property("ReadOnlyLiteral", 42);
 
@@ -44,7 +44,7 @@ int main()
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
         easydbuspp::proxy proxy(proxy_session_manager, "net.test.EasyDBuspp.Test", "net.test.EasyDBuspp.TestInterface",
-                                "/net/test/EasyDBuspp/Test");
+                                "/net/test/EasyDBuspp/TestObject");
 
         if (proxy.cached_property<int>("ReadOnlyLiteral") != 42)
             throw std::runtime_error("'ReadOnlyLiteral' is not the expected value!");
@@ -87,7 +87,7 @@ int main()
 
         if (!exception_caught)
             throw std::runtime_error("Read from 'WriteOnlyString' succeeded, and it shouldn't have!");
-  
+
         auto rw_prop_ret = proxy.cached_property<std::vector<std::string>>("FreeJazzMusicians");
 
         rw_prop_ret.emplace_back("John Coltrane");

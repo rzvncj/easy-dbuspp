@@ -26,10 +26,12 @@ int main()
     using namespace std::chrono_literals;
 
     try {
-        const std::string BUS_NAME {"org.gtk.GDBus.Test"};
+        const std::string BUS_NAME {"net.test.EasyDBuspp.Test"};
+        const std::string INTERFACE_NAME {"net.test.EasyDBuspp.TestInterface"};
+        const std::string OBJECT_PATH {"/net/test/EasyDBuspp/TestObject"};
 
         easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION};
-        easydbuspp::proxy proxy {session_manager, BUS_NAME, "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject"};
+        easydbuspp::proxy           proxy {session_manager, BUS_NAME, INTERFACE_NAME, OBJECT_PATH};
 
         easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(session_manager);
         std::string                            unique_bus_name = dbus_proxy.unique_bus_name(BUS_NAME);
@@ -116,7 +118,7 @@ int main()
             [&session_manager](const std::string& s) {
                 std::cout << "Got signal UnicastSignal: ['" << s << "']" << std::endl;
             },
-            unique_bus_name.c_str(), "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject");
+            unique_bus_name.c_str(), INTERFACE_NAME, OBJECT_PATH);
 
         auto a = std::async(std::launch::async, [&session_manager] {
             session_manager.run();

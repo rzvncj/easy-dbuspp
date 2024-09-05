@@ -56,8 +56,9 @@ std::string most_interesting_jazz_musician()
 int main()
 {
     try {
-        easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION, "org.gtk.GDBus.Test"};
-        easydbuspp::object object {session_manager, "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject"};
+        easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION, "net.test.EasyDBuspp.Test"};
+        easydbuspp::object          object {session_manager, "net.test.EasyDBuspp.TestInterface",
+                                   "/net/test/EasyDBuspp/TestObject"};
 
         object.add_method("MostInterestingJazzMusician", most_interesting_jazz_musician);
         object.add_method("TestPairAndTupleReturn", test_pair_and_tuple_return);

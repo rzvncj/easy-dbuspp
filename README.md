@@ -22,12 +22,13 @@ using it.
 Here's how we create a service:
 
 ```cpp
-easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION, "org.gtk.GDBus.Test"};
-easydbuspp::object object {session_manager, "org.gtk.GDBus.TestInterface", "/org/gtk/GDBus/TestObject"};
+easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION, "net.test.EasyDBuspp.Test"};
+easydbuspp::object object {session_manager, "net.test.EasyDBuspp.TestInterface", "/net/test/EasyDBuspp/TestObject"};
 ```
 
-The second parameter to `session_manager`'s constructor is the bus name. Then we create an object which
-uses the `session_manager` instance, with a given interface name and a D-Bus object path.
+The second parameter to `session_manager`'s constructor is the bus name we're requesting.
+Then we create an object which uses the `session_manager` instance, with a given interface
+name and a D-Bus object path.
 
 ### Registering methods
 
@@ -170,8 +171,9 @@ Here's how to set one up:
 
 ```cpp
 easydbuspp::session_manager session_manager {easydbuspp::bus_type_t::SESSION};
-easydbuspp::proxy           proxy(session_manager, "org.gtk.GDBus.Test", "org.gtk.GDBus.TestInterface",
-                                  "/org/gtk/GDBus/TestObject");
+easydbuspp::proxy           proxy(session_manager, "net.test.EasyDBuspp.Test",
+                                  "net.test.EasyDBuspp.TestInterface",
+                                  "/net/test/EasyDBuspp/TestObject");
 ```
 
 ### Calling a method
