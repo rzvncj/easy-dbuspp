@@ -257,6 +257,29 @@ proxy.call<void>("TriggerBroadcastSignal");
 Once the signal is triggered, the callback is called, which stops the main thread loop,
 which allows the process to exit.
 
+## D-Bus $\leftrightarrow$ C++ type mapping
+
+| D-Bus         | C++                              |
+| ------------- | -------------------------------- |
+| `b`           | `bool`                           |
+| `n`           | `int16_t`                        |
+| `q`           | `uint16_t`                       |
+| `i`           | `int32_t`                        |
+| `u`           | `uint32_t`                       |
+| `x`           | `int64_t`                        |
+| `t`           | `uint64_t`                       |
+| `d`           | `double`, `float`                |
+| `y`           | `std::byte`                      |
+| `s`           | `std::string`                    |
+| `o`           | `object_path_t`                  |
+| `v`           | `std::variant`                   |
+| `a`           | `std::vector`                    |
+| `()`          | `std::tuple`, `std::pair`        |
+| `a{}`         | `std::map`, `std::unordered_map` |
+
+You may have noticed that `object_path_t` does not look like a standard C++ type.
+But it is just an alias for `std::filesystem::path`, so in reality it is.
+
 ## Building
 
 ```
