@@ -58,6 +58,10 @@ int main()
 
         obj_session_manager.stop();
 
+        // Make sure exceptions are propagated if they were thrown.
+        obj_a.get();
+        proxy_a.get();
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;
