@@ -90,6 +90,17 @@ int main()
             throw std::runtime_error("Nothing's really wrong, just testing.");
         });
 
+        std::string byte_string;
+
+        object.add_method("TakeAVectorOfByteAndReturnIt", [&byte_string](const std::vector<std::byte>& bytes) {
+            byte_string.resize(bytes.size());
+            std::transform(bytes.begin(), bytes.end(), byte_string.begin(), [](std::byte b) {
+                return std::to_integer<char>(b);
+            });
+
+            return bytes;
+        });
+
         auto a = std::async(std::launch::async, [&obj_session_manager] {
             obj_session_manager.run();
         });
@@ -154,6 +165,17 @@ int main()
 
         if (!exception_caught)
             throw std::runtime_error("'ThrowException' should have thrown an exception but didn't!");
+
+        std::vector<std::byte> bytes {std::byte {'h'}, std::byte {'e'}, std::byte {'l'}, std::byte {'l'},
+                                      std::byte {'o'}};
+
+        auto bytes_out = proxy.call<std::vector<std::byte>>("TakeAVectorOfByteAndReturnIt", bytes);
+
+        if (byte_string != "hello")
+            throw std::runtime_error("Unexpected value computed by 'TakeAVectorOfByteAndReturnIt'!");
+
+        if (bytes != bytes_out)
+            throw std::runtime_error("Unexpected value returned by 'TakeAVectorOfByteAndReturnIt'!");
 
         obj_session_manager.stop();
 
