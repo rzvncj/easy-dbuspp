@@ -10,6 +10,14 @@ dep_threads = dependency('threads')
 
 incdir = include_directories('include')
 
+conf = configuration_data()
+
+if build_machine.endian() == 'big'
+  conf.set('IS_BIG_ENDIAN', 1)
+endif
+
+configure_file(output: 'config.h', configuration: conf)
+
 easy_dbuspp = library('easy-dbuspp',
    [
       'src/g_thread_pool.cpp',
@@ -24,6 +32,16 @@ easy_dbuspp = library('easy-dbuspp',
       dep_threads,
    ],
    install : true
+)
+
+firefox_openurl = executable('firefox_openurl',
+   'examples/firefox_openurl.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+      dep_threads,
+   ],
+   link_with: easy_dbuspp
 )
 
 test_methods = executable('methods',
