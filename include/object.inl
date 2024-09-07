@@ -35,22 +35,31 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
             throw std::runtime_error("Method '" + name + "': too many out argument names!");
     }
 
-    int         arg_index {0};
+    size_t      arg_index {0};
     std::string method_xml {"  <method name='" + name + "'>\n"};
 
     (
         [&]() {
-            if constexpr (!std::is_same_v<std::decay_t<A>, method_context>)
-                method_xml += "   <arg name='"
-                    + (in_argument_names.empty() ? "in_arg" + std::to_string(arg_index++)
-                                                 : in_argument_names[arg_index++])
-                    + "' type='" + to_dbus_type_string<A>() + "' direction='in'/>\n";
+            if constexpr (!std::is_same_v<std::decay_t<A>, method_context>) {
+                std::string arg_name = "in_arg" + std::to_string(arg_index);
+
+                if (!in_argument_names.empty()) {
+                    if (arg_index == in_argument_names.size())
+                        throw std::runtime_error("Method '" + name + "': too few input argument names provided!");
+                    arg_name = in_argument_names[arg_index];
+                }
+
+                method_xml
+                    += "   <arg name='" + arg_name + "' type='" + to_dbus_type_string<A>() + "' direction='in'/>\n";
+
+                ++arg_index;
+            }
         }(),
         ...);
 
-    if (!in_argument_names.empty() && in_argument_names.size() != static_cast<size_t>(arg_index))
+    if (!in_argument_names.empty() && in_argument_names.size() != arg_index)
         throw std::runtime_error("Method '" + name
-                                 + "': number of in argument names does not match number of arguments!");
+                                 + "': number of input argument names does not match number of arguments!");
 
     if constexpr (!std::is_void_v<R>) {
         if constexpr (is_tuple_like_v<R>) {

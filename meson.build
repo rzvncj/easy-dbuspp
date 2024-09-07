@@ -92,6 +92,17 @@ test_unicast_signal = executable('unicast_signal',
 )
 test('unicast_signal', test_unicast_signal, is_parallel: false)
 
+test_param_names = executable('param_names',
+   'tests/param_names.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+      dep_threads,
+   ],
+   link_with: easy_dbuspp
+)
+test('param_names', test_param_names, is_parallel: false)
+
 run_target('cppcheck', command : ['cppcheck', '--enable=all',
    '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
    '--suppress=unusedFunction', '--check-level=exhaustive',
