@@ -20,7 +20,6 @@
 #include "type_mapping.h"
 #include "types.h"
 #include <stdexcept>
-#include <string>
 
 namespace easydbuspp {
 

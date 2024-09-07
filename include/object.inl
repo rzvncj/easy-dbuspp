@@ -26,10 +26,6 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
                                                    const std::vector<std::string>& in_argument_names,
                                                    const std::vector<std::string>& out_argument_names)
 {
-    if (!in_argument_names.empty() && in_argument_names.size() != sizeof...(A))
-        throw std::runtime_error("Method '" + name
-                                 + "': number of in argument names does not match number of arguments!");
-
     if constexpr (!std::is_void_v<R>) {
         if constexpr (is_tuple_like_v<R>) {
             if (!out_argument_names.empty() && out_argument_names.size() != std::tuple_size_v<R>)
@@ -42,10 +38,19 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
     int         arg_index {0};
     std::string method_xml {"  <method name='" + name + "'>\n"};
 
-    ((method_xml += "   <arg name='"
-          + (in_argument_names.empty() ? "in_arg" + std::to_string(arg_index++) : in_argument_names[arg_index++])
-          + "' type='" + to_dbus_type_string<A>() + "' direction='in'/>\n"),
-     ...);
+    (
+        [&]() {
+            if constexpr (!std::is_same_v<std::decay_t<A>, method_context>)
+                method_xml += "   <arg name='"
+                    + (in_argument_names.empty() ? "in_arg" + std::to_string(arg_index++)
+                                                 : in_argument_names[arg_index++])
+                    + "' type='" + to_dbus_type_string<A>() + "' direction='in'/>\n";
+        }(),
+        ...);
+
+    if (!in_argument_names.empty() && in_argument_names.size() != static_cast<size_t>(arg_index))
+        throw std::runtime_error("Method '" + name
+                                 + "': number of in argument names does not match number of arguments!");
 
     if constexpr (!std::is_void_v<R>) {
         if constexpr (is_tuple_like_v<R>) {
@@ -69,14 +74,21 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
     method_xml += "  </method>\n";
     methods_xml_ += method_xml;
 
-    return [callable](GVariant* parameters) {
+    return [callable](GVariant* parameters, const method_context& context) {
         std::tuple<std::decay_t<A>...> fn_args;
         gsize                          arg_index {0};
 
         // Initialize the tuple
         std::apply(
-            [parameters, &arg_index](auto&&... args) {
-                ((args = extract<decltype(args)>(parameters, arg_index++)), ...);
+            [parameters, &arg_index, &context](auto&&... args) {
+                (
+                    [&]() {
+                        if constexpr (std::is_same_v<std::decay_t<decltype(args)>, method_context>)
+                            args = context;
+                        else
+                            args = extract<decltype(args)>(parameters, arg_index++);
+                    }(),
+                    ...);
             },
             fn_args);
 

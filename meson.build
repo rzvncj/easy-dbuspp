@@ -37,6 +37,17 @@ test_methods = executable('methods',
 )
 test('methods', test_methods, is_parallel: false)
 
+test_method_context = executable('method_context',
+   'tests/method_context.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+      dep_threads,
+   ],
+   link_with: easy_dbuspp
+)
+test('method_context', test_method_context, is_parallel: false)
+
 test_properties = executable('properties',
    'tests/properties.cpp',
    include_directories: incdir,

@@ -95,6 +95,8 @@ private:
     void attach(object* object_ptr);
     void detach(object* object_ptr);
 
+    void setup_main_loop();
+
     template <typename C, typename... A>
     signal_handler_t generate_signal_handler(C&& callable, const std::function<void(A...)>&);
 
@@ -106,7 +108,7 @@ private:
                           const gchar* interface_name, const gchar* signal_name, GVariant* parameters,
                           gpointer user_data);
 
-    static int stop_sighandler(void* loop);
+    static int stop_sighandler(void* param);
 
 private:
     guint                                             owner_id_ {0};

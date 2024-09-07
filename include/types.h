@@ -21,6 +21,7 @@
 #include <gio/gio.h>
 #include <map>
 #include <memory>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -28,6 +29,10 @@
 #include <vector>
 
 namespace easydbuspp {
+
+struct method_context {
+    std::string bus_name;
+};
 
 using object_path_t = std::filesystem::path;
 

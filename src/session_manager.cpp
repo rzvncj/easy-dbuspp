@@ -48,6 +48,8 @@ session_manager::session_manager(bus_type_t bus_type)
 
         throw std::runtime_error("Can't connect to the bus: " + error_message);
     }
+
+    setup_main_loop();
 }
 
 session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name) : bus_name_ {bus_name}
@@ -56,12 +58,12 @@ session_manager::session_manager(bus_type_t bus_type, const std::string& bus_nam
         to_g_bus_type(bus_type), bus_name.c_str(),
         static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
         on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr);
+
+    setup_main_loop();
 }
 
 session_manager::~session_manager()
 {
-    stop();
-
     if (connection_) {
         for (auto&& object_ptr : objects_)
             object_ptr->disconnect();
@@ -72,27 +74,20 @@ session_manager::~session_manager()
 
     if (connection_)
         g_object_unref(connection_);
+
+    stop();
+
+    g_main_loop_unref(loop_);
 }
 
 void session_manager::run()
 {
-    if (loop_)
-        throw std::runtime_error("Main loop is already running!");
-
-    loop_ = g_main_loop_new(nullptr, FALSE);
-
-    g_unix_signal_add(SIGINT, stop_sighandler, loop_);
-    g_unix_signal_add(SIGTERM, stop_sighandler, loop_);
-
     g_main_loop_run(loop_);
-    g_main_loop_unref(loop_);
-
-    loop_ = nullptr;
 }
 
 void session_manager::stop()
 {
-    if (loop_)
+    if (g_main_loop_is_running(loop_))
         g_main_loop_quit(loop_);
 }
 
@@ -110,6 +105,14 @@ void session_manager::detach(object* object_ptr)
         object_ptr->disconnect();
         objects_.erase(object_ptr);
     }
+}
+
+void session_manager::setup_main_loop()
+{
+    loop_ = g_main_loop_new(nullptr, FALSE);
+
+    g_unix_signal_add(SIGINT, stop_sighandler, loop_);
+    g_unix_signal_add(SIGTERM, stop_sighandler, loop_);
 }
 
 void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
@@ -149,9 +152,13 @@ void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* 
     it->second(parameters);
 }
 
-int session_manager::stop_sighandler(void* loop)
+int session_manager::stop_sighandler(void* param)
 {
-    g_main_loop_quit(static_cast<GMainLoop*>(loop));
+    GMainLoop* loop = static_cast<GMainLoop*>(param);
+
+    if (g_main_loop_is_running(loop))
+        g_main_loop_quit(loop);
+
     return G_SOURCE_CONTINUE;
 }
 

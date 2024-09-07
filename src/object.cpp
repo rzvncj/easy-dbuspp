@@ -92,6 +92,8 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 {
     using namespace std::string_literals;
 
+    method_context context {sender};
+
     thread_pool_.push(new std::function<void()> {[=] {
         try {
             object* obj_ptr = static_cast<object*>(user_data);
@@ -105,7 +107,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
             if (obj_ptr->pre_request_handler_)
                 obj_ptr->pre_request_handler_(request_type::METHOD, sender, method_name);
 
-            GVariant* ret = it->second(parameters);
+            GVariant* ret = it->second(parameters, context);
             g_dbus_method_invocation_return_value(invocation, ret);
 
         } catch (const std::exception& e) {

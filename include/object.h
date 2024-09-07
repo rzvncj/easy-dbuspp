@@ -36,7 +36,7 @@ class session_manager;
  */
 class object {
 
-    using method_handler_t         = std::function<GVariant*(GVariant*)>;
+    using method_handler_t         = std::function<GVariant*(GVariant*, const method_context&)>;
     using property_read_handler_t  = std::function<GVariant*()>;
     using property_write_handler_t = std::function<gboolean(GVariant*)>;
 
