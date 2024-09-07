@@ -243,9 +243,7 @@ session_manager.signal_subscribe("BroadcastSignal", [&session_manager](int i, co
 Then we could just run the main processing loop in a different thread:
 
 ```cpp
-auto a = std::async(std::launch::async, [&session_manager] {
-    session_manager.run();
-});
+session_manager.run_async();
 ```
 
 leaving the main thread free to trigger the signal:
