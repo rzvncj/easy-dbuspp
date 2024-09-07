@@ -64,6 +64,8 @@ session_manager::session_manager(bus_type_t bus_type, const std::string& bus_nam
 
 session_manager::~session_manager()
 {
+    destructor_called_ = true;
+
     if (connection_) {
         for (auto&& object_ptr : objects_)
             object_ptr->disconnect();
@@ -85,10 +87,23 @@ void session_manager::run()
     g_main_loop_run(loop_);
 }
 
+void session_manager::run_async()
+{
+    if (run_future_.valid())
+        return;
+
+    run_future_ = std::async(std::launch::async, [this] {
+        run();
+    });
+}
+
 void session_manager::stop()
 {
     if (g_main_loop_is_running(loop_))
         g_main_loop_quit(loop_);
+
+    if (!destructor_called_ && run_future_.valid())
+        run_future_.get();
 }
 
 void session_manager::attach(object* object_ptr)

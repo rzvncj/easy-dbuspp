@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <easydbuspp.h>
-#include <future>
 #include <iostream>
 #include <unistd.h>
 
@@ -36,9 +35,7 @@ int main()
             broadcast_signal("Done calculating PI, here's the value", 3.14);
         });
 
-        auto obj_a = std::async(std::launch::async, [&obj_session_manager] {
-            obj_session_manager.run();
-        });
+        obj_session_manager.run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -50,17 +47,11 @@ int main()
                 proxy_session_manager.stop();
             });
 
-        auto proxy_a = std::async(std::launch::async, [&proxy_session_manager] {
-            proxy_session_manager.run();
-        });
+        proxy_session_manager.run_async();
 
         proxy.call<void>("EmitBroadcastSignal");
 
         obj_session_manager.stop();
-
-        // Make sure exceptions are propagated if they were thrown.
-        obj_a.get();
-        proxy_a.get();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

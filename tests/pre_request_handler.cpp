@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <easydbuspp.h>
-#include <future>
 #include <iostream>
 #include <unistd.h>
 
@@ -52,9 +51,7 @@ int main()
                 throw std::runtime_error("Unexpected sender UID!");
         });
 
-        auto a = std::async(std::launch::async, [&obj_session_manager] {
-            obj_session_manager.run();
-        });
+        obj_session_manager.run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -63,9 +60,6 @@ int main()
         proxy.call<void>("DummyMethod");
 
         obj_session_manager.stop();
-
-        // Make sure exceptions are propagated if they were thrown.
-        a.get();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

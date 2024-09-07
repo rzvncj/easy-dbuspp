@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <easydbuspp.h>
-#include <future>
 #include <iostream>
 
 int main()
@@ -35,9 +34,7 @@ int main()
             sender_bus_name = mc.bus_name;
         });
 
-        auto a = std::async(std::launch::async, [&obj_session_manager] {
-            obj_session_manager.run();
-        });
+        obj_session_manager.run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -45,14 +42,11 @@ int main()
 
         proxy.call<void>("MethodTakingAMethodContext");
 
-        obj_session_manager.stop();
-
         if (sender_bus_name != proxy.unique_bus_name())
             throw std::runtime_error("Bus name mismatch (expected: " + proxy.unique_bus_name()
                                      + ", got: " + sender_bus_name + ")!");
 
-        // Make sure exceptions are propagated if they were thrown.
-        a.get();
+        obj_session_manager.stop();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <easydbuspp.h>
-#include <future>
 #include <iostream>
 #include <unistd.h>
 
@@ -36,9 +35,7 @@ int main()
             unicast_signal(mc.bus_name, "Unicast signal emitted!");
         });
 
-        auto obj_a = std::async(std::launch::async, [&obj_session_manager] {
-            obj_session_manager.run();
-        });
+        obj_session_manager.run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -55,17 +52,11 @@ int main()
             },
             unique_bus_name, INTERFACE_NAME, OBJECT_PATH);
 
-        auto proxy_a = std::async(std::launch::async, [&proxy_session_manager] {
-            proxy_session_manager.run();
-        });
+        proxy_session_manager.run_async();
 
         proxy.call<void>("EmitUnicastSignal");
 
         obj_session_manager.stop();
-
-        // Make sure exceptions are propagated if they were thrown.
-        obj_a.get();
-        proxy_a.get();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

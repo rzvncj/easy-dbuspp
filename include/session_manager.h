@@ -19,6 +19,7 @@
 
 #include "types.h"
 #include <functional>
+#include <future>
 #include <gio/gio.h>
 #include <memory>
 #include <string>
@@ -88,6 +89,9 @@ public:
     //! Start the D-Bus event processing loop.
     void run();
 
+    //! Start the D-Bus event processing loop asynchronously.
+    void run_async();
+
     //! Stop the D-Bus event processing loop.
     void stop();
 
@@ -117,6 +121,8 @@ private:
     std::unordered_set<object*>                       objects_;
     std::unordered_map<std::string, signal_handler_t> signal_handlers_;
     GDBusConnection*                                  connection_ {nullptr};
+    std::future<void>                                 run_future_;
+    bool                                              destructor_called_ {false};
 
     friend class object;
     friend class proxy;

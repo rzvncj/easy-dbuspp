@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <easydbuspp.h>
-#include <future>
 #include <iostream>
 
 int main()
@@ -56,9 +55,7 @@ int main()
                 return true;
             });
 
-        auto a = std::async(std::launch::async, [&obj_session_manager] {
-            obj_session_manager.run();
-        });
+        obj_session_manager.run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -130,9 +127,6 @@ int main()
             throw std::runtime_error("'FreeJazzMusicians' (method read) is not the expected value!");
 
         obj_session_manager.stop();
-
-        // Make sure exceptions are propagated if they were thrown.
-        a.get();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
