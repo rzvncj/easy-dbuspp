@@ -32,8 +32,8 @@ int main()
 
         auto unicast_signal = object.add_unicast_signal<std::string>("UnicastSignal");
 
-        object.add_method("EmitUnicastSignal", [&unicast_signal](const std::string& bus_name) {
-            unicast_signal(bus_name, "Unicast signal emitted!");
+        object.add_method("EmitUnicastSignal", [&unicast_signal](const easydbuspp::method_context& mc) {
+            unicast_signal(mc.bus_name, "Unicast signal emitted!");
         });
 
         auto obj_a = std::async(std::launch::async, [&obj_session_manager] {
@@ -59,7 +59,7 @@ int main()
             proxy_session_manager.run();
         });
 
-        proxy.call<void>("EmitUnicastSignal", proxy.unique_bus_name());
+        proxy.call<void>("EmitUnicastSignal");
 
         obj_session_manager.stop();
 
