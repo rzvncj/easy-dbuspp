@@ -150,6 +150,8 @@ GVariant* to_gvariant(T t)
 
     if constexpr (std::is_arithmetic_v<T> || decay_same_v<T, const char*>)
         return g_variant_new(to_dbus_type_string(t).c_str(), t);
+    else if constexpr (decay_same_v<T, std::byte>)
+        return g_variant_new(to_dbus_type_string(t).c_str(), std::to_integer<uint8_t>(t));
     else if constexpr (decay_same_v<T, std::string>)
         return g_variant_new(to_dbus_type_string(t).c_str(), t.c_str());
     else if constexpr (decay_same_v<T, object_path_t>)
