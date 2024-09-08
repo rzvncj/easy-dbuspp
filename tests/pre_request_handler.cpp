@@ -29,8 +29,10 @@ int main()
         easydbuspp::session_manager obj_session_manager {easydbuspp::bus_type_t::SESSION, BUS_NAME};
         easydbuspp::object          object {obj_session_manager, INTERFACE_NAME, OBJECT_PATH};
 
-        // Just to have something to invoke.
-        object.add_method("DummyMethod", [] {
+        object.add_method("RunMethod", [] {
+        });
+
+        object.add_method("DontRunMethod", [] {
         });
 
         object.pre_request_handler(
@@ -38,7 +40,7 @@ int main()
                 if (req_type != easydbuspp::object::request_type::METHOD)
                     throw std::runtime_error("Unexpected request type!");
 
-                if (dc.name != "DummyMethod")
+                if (dc.name != "RunMethod")
                     throw std::runtime_error("Unexpected method name!");
 
                 easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(obj_session_manager);
@@ -56,7 +58,18 @@ int main()
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
         easydbuspp::proxy           proxy {proxy_session_manager, BUS_NAME, INTERFACE_NAME, OBJECT_PATH};
 
-        proxy.call<void>("DummyMethod");
+        proxy.call<void>("RunMethod");
+
+        bool exception_caught {false};
+
+        try {
+            proxy.call<void>("DontRunMethod");
+        } catch (const std::exception&) {
+            exception_caught = true;
+        }
+
+        if (!exception_caught)
+            throw std::runtime_error("'DontRunMethod' ran when it shouldn't have!");
 
         obj_session_manager.stop();
 
