@@ -92,6 +92,9 @@ public:
     //! Start the D-Bus event processing loop asynchronously.
     void run_async();
 
+    //! Wait for an async loop to be over.
+    void wait();
+
     //! Stop the D-Bus event processing loop.
     void stop();
 

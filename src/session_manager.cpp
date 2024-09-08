@@ -97,6 +97,12 @@ void session_manager::run_async()
     });
 }
 
+void session_manager::wait()
+{
+    if (run_future_.valid())
+        run_future_.get();
+}
+
 void session_manager::stop()
 {
     if (g_main_loop_is_running(loop_))

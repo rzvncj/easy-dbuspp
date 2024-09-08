@@ -86,13 +86,13 @@ void object::disconnect()
     session_manager_.connection_ = nullptr;
 }
 
-void object::handle_method_call(GDBusConnection* /* connection */, const gchar* sender, const gchar* /* object_path */,
+void object::handle_method_call(GDBusConnection* /* connection */, const gchar* sender, const gchar* object_path,
                                 const gchar* interface_name, const gchar* method_name, GVariant* parameters,
                                 GDBusMethodInvocation* invocation, gpointer user_data)
 {
     using namespace std::string_literals;
 
-    method_context context {sender};
+    method_context context {sender, interface_name, object_path, method_name};
 
     thread_pool_.push(new std::function<void()> {[=] {
         try {
