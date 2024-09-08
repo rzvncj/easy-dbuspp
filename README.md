@@ -194,7 +194,7 @@ command line or GUI tools:
 Let's introspect our object with `gdbus` (ignoring the properties for the purposes of this section):
 
 ```
-gdbus introspect --session -d net.test.EasyDBuspp.Test -o /net/test/EasyDBuspp/TestObject
+$ gdbus introspect --session -d net.test.EasyDBuspp.Test -o /net/test/EasyDBuspp/TestObject
 [...]
   interface net.test.EasyDBuspp.TestInterface {
     methods:
@@ -431,6 +431,34 @@ object.add_method("EmitUnicastSignal", [&unicast_signal](const easydbuspp::dbus_
 This is probably a niche thing that most people won't have to worry about knowing or using.
 
 *If at all possible, prefer the cleaner `pre_request_handler()` mechanism.*
+
+### Vetoing requests with a pre-request handler
+
+You can register a callback that will be invoked before each time a D-Bus request (calling a
+method, setting or reading a property) is handled. The callback needs to take two parameters
+(an `easydbuspp::object::request_type` and a `const easydbuspp::dbus_context&`) and return nothing.
+
+If the values in the `dbus_context` object don't pass your validation criteria, just throw
+an `std::exception`-derived exception and the D-Bus request will not be processed.
+
+```cpp
+object.pre_request_handler(
+    [&obj_session_manager](easydbuspp::object::request_type req_type, const easydbuspp::dbus_context& dc) {
+        if (req_type != easydbuspp::object::request_type::METHOD)
+            throw std::runtime_error("Unexpected request type!");
+
+        if (dc.name != "DummyMethod")
+            throw std::runtime_error("Unexpected method name!");
+
+        easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(obj_session_manager);
+
+        if (getpid() != dbus_proxy.pid(dc.bus_name))
+            throw std::runtime_error("Unexpected sender PID!");
+
+        if (getuid() != dbus_proxy.uid(dc.bus_name))
+            throw std::runtime_error("Unexpected sender UID!");
+    });
+```
 
 ## D-Bus $\leftrightarrow$ C++ type mapping
 
