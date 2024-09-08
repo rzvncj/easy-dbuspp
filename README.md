@@ -246,7 +246,6 @@ interface net.test.EasyDBuspp.TestInterface {
 };
 ```
 
-
 ### Proxies: the other side of the coin
 
 Now that we have a service up and running, we can connect to it using `easydbuspp::proxy`.
@@ -348,6 +347,90 @@ proxy.call<void>("TriggerBroadcastSignal");
 
 Once the signal is triggered, the callback is called, which stops the main thread loop,
 which allows the process to exit.
+
+### Passing D-Bus context to methods
+
+This library deliberately makes a big effort to shield the user from having to deal with
+D-Bus. But sometimes more information is really useful, for example when we're dealing
+with unicast signals.
+
+Unlike broadcast signals, unicast signals are sent from a specific D-Bus entity (identified
+as `{dbus_name, object_path, interface_name, signal_name}`) to a receiver bus. Something on
+the receiver dbus must register to receive the signal specifically from the sender bus,
+interface and object.
+
+Unicast signals are always associated with an `easydbuspp::object`, so they will always be
+sent from the object's path and interface. But to which destination bus?
+
+Let's add a unicast signal with an `std::string` parameter to our object:
+
+```cpp
+auto unicast_signal = object.add_unicast_signal<std::string>("UnicastSignal");
+```
+
+Let's assume we have set up a proxy that has subscribed to a unicast signal from our
+object:
+
+```cpp
+easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(proxy_session_manager);
+std::string                            unique_bus_name =
+    dbus_proxy.unique_bus_name("net.test.EasyDBuspp.Test");
+
+proxy_session_manager.signal_subscribe(
+    "UnicastSignal",
+    [&proxy_session_manager](const std::string& s) {
+        std::cout << "Got signal UnicastSignal: ['" << s << "']" << std::endl;
+        proxy_session_manager.stop();
+    },
+    unique_bus_name, "net.test.EasyDBuspp.TestInterface", "/net/test/EasyDBuspp/TestObject");
+```
+
+Now, the way to call a signal from a method would be:
+
+```cpp
+unicast_signal(destination_bus_name, "Unicast signal emitted!");
+```
+
+But what do we put in `destination_bus_name`? We could trigger the signal from a method
+that takes an `std::string` parameter, send in the destination bus name from the caller,
+and use that value for the signal. But that opens us up to cheating: maybe we only want
+to send out signals to certain busses, and the real caller bus is not the bus sent as a
+parameter.
+
+In that case, we want the actual bus that D-Bus is seeing as the caller bus when handling
+our method. There's no way around it, we need that passed in to our method directly by
+D-Bus.
+
+But that means that a callable parameter that brings that in cannot participate in the
+D-Bus introspection information. It also means that it cannot be a required parameter,
+since most users of the library would find it both unnecessary and cumbersome to deal
+with D-Bus data they don't care about.
+
+The imperfect solution is the `easydbuspp::method_context` type, which is a struct:
+
+```cpp
+struct method_context {
+    std::string   bus_name;
+    std::string   interface_name;
+    object_path_t object_path;
+    std::string   method_name;
+};
+```
+
+All you need to do is have one parameter in your callable with this type. The library
+will automatically detect it and fill it in. It won't show up as a method parameter in
+introspection, and it will be treated as non-existent as far as the input parameter
+names are concerned.
+
+```cpp
+object.add_method("EmitUnicastSignal", [&unicast_signal](const easydbuspp::method_context& mc) {
+    unicast_signal(mc.bus_name, "Unicast signal emitted!");
+});
+```
+
+This is probably a niche thing that most people won't have to worry about knowing or using.
+
+*If at all possible, prefer the cleaner `pre_request_handler()` mechanism.*
 
 ## D-Bus $\leftrightarrow$ C++ type mapping
 
