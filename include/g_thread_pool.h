@@ -24,7 +24,7 @@ namespace easydbuspp {
 class g_thread_pool {
 
 public:
-    g_thread_pool(GFunc func);
+    explicit g_thread_pool(GFunc func);
     ~g_thread_pool();
 
     g_thread_pool(const g_thread_pool&)            = delete;
