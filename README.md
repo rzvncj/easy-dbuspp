@@ -176,6 +176,12 @@ session_manager.run();
 
 This plugs `SIGTERM` and `SIGINT` in, so doing `^C` in your terminal will shut down gracefully.
 
+If you want to start the service asynchronously, that's possible too:
+
+```cpp
+session_manager.run_async();
+```
+
 And that's it! You can introspect and use your shiny new D-Bus object with one of a variety of
 command line or GUI tools:
 
