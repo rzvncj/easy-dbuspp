@@ -163,6 +163,63 @@ command line or GUI tools:
 * [qtdbusviewer](https://doc.qt.io/qt-6/qdbusviewer.html)
 * [gdbus](https://manpages.ubuntu.com/manpages/focal/man1/gdbus.1.html)
 
+### D-Bus parameter names
+
+Let's introspect our object with `gdbus` (ignoring the properties for the purposes of this section):
+
+```
+gdbus introspect --session -d net.test.EasyDBuspp.Test -o /net/test/EasyDBuspp/TestObject
+[...]
+  interface net.test.EasyDBuspp.TestInterface {
+    methods:
+      MethodTakingAStringAndReturningBool(in  s in_arg0,
+                                          out b out_arg0);
+      TriggerBroadcastSignal();
+    signals:
+      BroadcastSignal(i arg0,
+                      s arg1,
+                      d arg2);
+    properties:
+  };
+```
+
+Notice that the introspected parameter names have been automatically generated (`in_arg0`, `out_arg0` for
+the method, `arg0`, `arg1`, `arg2` for the signal).
+
+What if you want to name them, though? That's possible by specifying (optional) `std::vector<std::string>` parameters
+for input parameter names, and output parameter names (C++ callable return type(s)):
+
+```cpp
+object.add_method("MethodTakingAStringAndReturningBool",
+                  [](const std::string& input) {
+                      return input == "password";
+                  }, {"input"}, {"authorization_succeeded"});
+
+```
+
+The same goes for signals:
+
+```cpp
+auto broadcast_signal = object.add_broadcast_signal<int, std::string, float>(
+    "BroadcastSignal", {"int_param", "string_param", "float_param"});
+```
+
+Introspecting the object again shows that it's working:
+
+```
+interface net.test.EasyDBuspp.TestInterface {
+  methods:
+    MethodTakingAStringAndReturningBool(in  s input,
+                                        out b authorization_succeeded);
+    TriggerBroadcastSignal();
+  signals:
+    BroadcastSignal(i int_param,
+                    s string_param,
+                    d float_param);
+  properties:
+};
+```
+
 ### Proxies: the other side of the coin
 
 Now that we have a service up and running, we can connect to it using `easydbuspp::proxy`.
