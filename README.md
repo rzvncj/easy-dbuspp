@@ -281,8 +281,18 @@ If we _do_ want to affect the remote object, there's no way around an expensive 
 to `org.freedesktop.DBus.Properties.Set`, but we can do that too:
 
 ```cpp
-proxy.cached_property("ReadWriteStringProp", "Value to set on remote object");
+proxy.property("ReadWriteStringProp", "Value to set on remote object");
 ```
+
+Reading the property directly from the remote object is possible as well, with the same
+caveats as above (it will do a method call):
+
+```cpp
+auto string_prop = proxy.property<std::string>("ReadWriteStringProp");
+```
+
+In other words, the `cached_`-prefix versions will try to work with the local version, the
+other versions will work directly with the remote object.
 
 ### Registering for a signal
 
