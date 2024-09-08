@@ -62,7 +62,7 @@ int main()
             throw std::runtime_error("Passed too few input parameter names in and no exception!");
 
         object.add_method("InputParameterNamesWithMethodContext",
-                          [](const easydbuspp::method_context&, int, float, const std::string&) {
+                          [](const easydbuspp::dbus_context&, int, float, const std::string&) {
                           },
                           {"i_param", "f_param", "s_param"});
 

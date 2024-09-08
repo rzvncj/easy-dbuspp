@@ -398,22 +398,22 @@ to send out signals to certain busses, and the real caller bus is not the bus se
 parameter.
 
 In that case, we want the actual bus that D-Bus is seeing as the caller bus when handling
-our method. There's no way around it, we need that passed in to our method directly by
+our method. There's no way around it, we need that passed into our method directly by
 D-Bus.
 
-But that means that a callable parameter that brings that in cannot participate in the
-D-Bus introspection information. It also means that it cannot be a required parameter,
-since most users of the library would find it both unnecessary and cumbersome to deal
-with D-Bus data they don't care about.
+But that means that this new parameter cannot participate in the D-Bus introspection
+information. It also means that it cannot be a required parameter, since most users of the
+library would find it both unnecessary and cumbersome to deal with D-Bus data they don't
+care about.
 
-The imperfect solution is the `easydbuspp::method_context` type, which is a struct:
+The imperfect solution is the `easydbuspp::dbus_context` type, which is a struct:
 
 ```cpp
-struct method_context {
+struct dbus_context {
     std::string   bus_name;
     std::string   interface_name;
     object_path_t object_path;
-    std::string   method_name;
+    std::string   name;
 };
 ```
 
@@ -423,8 +423,8 @@ introspection, and it will be treated as non-existent as far as the input parame
 names are concerned.
 
 ```cpp
-object.add_method("EmitUnicastSignal", [&unicast_signal](const easydbuspp::method_context& mc) {
-    unicast_signal(mc.bus_name, "Unicast signal emitted!");
+object.add_method("EmitUnicastSignal", [&unicast_signal](const easydbuspp::dbus_context& dc) {
+    unicast_signal(dc.bus_name, "Unicast signal emitted!");
 });
 ```
 

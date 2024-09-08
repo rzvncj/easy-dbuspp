@@ -36,7 +36,7 @@ class session_manager;
  */
 class object {
 
-    using method_handler_t         = std::function<GVariant*(GVariant*, const method_context&)>;
+    using method_handler_t         = std::function<GVariant*(GVariant*, const dbus_context&)>;
     using property_read_handler_t  = std::function<GVariant*()>;
     using property_write_handler_t = std::function<gboolean(GVariant*)>;
 
@@ -45,7 +45,7 @@ public:
     enum class request_type { METHOD, GET_PROPERTY, SET_PROPERTY };
 
     //! Type to which all pre-request handler callbacks must conform.
-    using pre_request_handler_t = std::function<void(request_type, const std::string&, const std::string&)>;
+    using pre_request_handler_t = std::function<void(request_type, const dbus_context&)>;
 
 public:
     /*!

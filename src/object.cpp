@@ -92,7 +92,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 {
     using namespace std::string_literals;
 
-    method_context context {sender, interface_name, object_path, method_name};
+    dbus_context context {sender, interface_name, object_path, method_name};
 
     thread_pool_.push(new std::function<void()> {[=] {
         try {
@@ -105,7 +105,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
                                          + obj_ptr->object_path_.generic_string() + "'!");
 
             if (obj_ptr->pre_request_handler_)
-                obj_ptr->pre_request_handler_(request_type::METHOD, sender, method_name);
+                obj_ptr->pre_request_handler_(request_type::METHOD, context);
 
             GVariant* ret = it->second(parameters, context);
             g_dbus_method_invocation_return_value(invocation, ret);
@@ -117,9 +117,9 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
     }});
 }
 
-GVariant* object::handle_get_property(GDBusConnection* /* connection */, const gchar* sender,
-                                      const gchar* /* object_path */, const gchar* /* interface_name */,
-                                      const gchar* property_name, GError** error, gpointer user_data)
+GVariant* object::handle_get_property(GDBusConnection* /* connection */, const gchar* sender, const gchar* object_path,
+                                      const gchar* interface_name, const gchar* property_name, GError** error,
+                                      gpointer user_data)
 {
     using namespace std::string_literals;
 
@@ -138,8 +138,10 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
             throw std::runtime_error("Property '"s + property_name + "' for object '"
                                      + obj_ptr->object_path_.generic_string() + "' cannot be read!");
 
+        dbus_context context {sender, interface_name, object_path, property_name};
+
         if (obj_ptr->pre_request_handler_)
-            obj_ptr->pre_request_handler_(request_type::GET_PROPERTY, sender, property_name);
+            obj_ptr->pre_request_handler_(request_type::GET_PROPERTY, context);
 
         return getter();
 
@@ -149,9 +151,9 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
     }
 }
 
-gboolean object::handle_set_property(GDBusConnection* /* connection */, const gchar* sender,
-                                     const gchar* /* object_path */, const gchar* /* interface_name */,
-                                     const gchar* property_name, GVariant* value, GError** error, gpointer user_data)
+gboolean object::handle_set_property(GDBusConnection* /* connection */, const gchar* sender, const gchar* object_path,
+                                     const gchar* interface_name, const gchar* property_name, GVariant* value,
+                                     GError** error, gpointer user_data)
 {
     using namespace std::string_literals;
 
@@ -170,8 +172,10 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
             throw std::runtime_error("Property '"s + property_name + "' for object '"
                                      + obj_ptr->object_path_.generic_string() + "' is read only!");
 
+        dbus_context context {sender, interface_name, object_path, property_name};
+
         if (obj_ptr->pre_request_handler_)
-            obj_ptr->pre_request_handler_(request_type::SET_PROPERTY, sender, property_name);
+            obj_ptr->pre_request_handler_(request_type::SET_PROPERTY, context);
 
         return setter(value);
 

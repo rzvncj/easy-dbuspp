@@ -31,8 +31,8 @@ int main()
 
         auto unicast_signal = object.add_unicast_signal<std::string>("UnicastSignal");
 
-        object.add_method("EmitUnicastSignal", [&unicast_signal](const easydbuspp::method_context& mc) {
-            unicast_signal(mc.bus_name, "Unicast signal emitted!");
+        object.add_method("EmitUnicastSignal", [&unicast_signal](const easydbuspp::dbus_context& dc) {
+            unicast_signal(dc.bus_name, "Unicast signal emitted!");
         });
 
         obj_session_manager.run_async();

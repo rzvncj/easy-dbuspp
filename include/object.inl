@@ -40,7 +40,7 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
 
     (
         [&]() {
-            if constexpr (!std::is_same_v<std::decay_t<A>, method_context>) {
+            if constexpr (!std::is_same_v<std::decay_t<A>, dbus_context>) {
                 std::string arg_name = "in_arg" + std::to_string(arg_index);
 
                 if (!in_argument_names.empty()) {
@@ -83,7 +83,7 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
     method_xml += "  </method>\n";
     methods_xml_ += method_xml;
 
-    return [callable](GVariant* parameters, const method_context& context) {
+    return [callable](GVariant* parameters, const dbus_context& context) {
         std::tuple<std::decay_t<A>...> fn_args;
         gsize                          arg_index {0};
 
@@ -92,7 +92,7 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
             [parameters, &arg_index, &context](auto&&... args) {
                 (
                     [&]() {
-                        if constexpr (std::is_same_v<std::decay_t<decltype(args)>, method_context>)
+                        if constexpr (std::is_same_v<std::decay_t<decltype(args)>, dbus_context>)
                             args = context;
                         else
                             args = extract<decltype(args)>(parameters, arg_index++);

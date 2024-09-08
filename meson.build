@@ -55,8 +55,8 @@ test_methods = executable('methods',
 )
 test('methods', test_methods, is_parallel: false)
 
-test_method_context = executable('method_context',
-   'tests/method_context.cpp',
+test_dbus_context = executable('dbus_context',
+   'tests/dbus_context.cpp',
    include_directories: incdir,
    dependencies: [
       dep_gio,
@@ -64,7 +64,7 @@ test_method_context = executable('method_context',
    ],
    link_with: easy_dbuspp
 )
-test('method_context', test_method_context, is_parallel: false)
+test('dbus_context', test_dbus_context, is_parallel: false)
 
 test_properties = executable('properties',
    'tests/properties.cpp',

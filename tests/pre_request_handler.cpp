@@ -33,23 +33,22 @@ int main()
         object.add_method("DummyMethod", [] {
         });
 
-        object.pre_request_handler([&obj_session_manager](easydbuspp::object::request_type req_type,
-                                                          const std::string&               sender_bus_name,
-                                                          const std::string&               req_entity_name) {
-            if (req_type != easydbuspp::object::request_type::METHOD)
-                throw std::runtime_error("Unexpected request type!");
+        object.pre_request_handler(
+            [&obj_session_manager](easydbuspp::object::request_type req_type, const easydbuspp::dbus_context& dc) {
+                if (req_type != easydbuspp::object::request_type::METHOD)
+                    throw std::runtime_error("Unexpected request type!");
 
-            if (req_entity_name != "DummyMethod")
-                throw std::runtime_error("Unexpected method name!");
+                if (dc.name != "DummyMethod")
+                    throw std::runtime_error("Unexpected method name!");
 
-            easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(obj_session_manager);
+                easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(obj_session_manager);
 
-            if (getpid() != dbus_proxy.pid(sender_bus_name))
-                throw std::runtime_error("Unexpected sender PID!");
+                if (getpid() != dbus_proxy.pid(dc.bus_name))
+                    throw std::runtime_error("Unexpected sender PID!");
 
-            if (getuid() != dbus_proxy.uid(sender_bus_name))
-                throw std::runtime_error("Unexpected sender UID!");
-        });
+                if (getuid() != dbus_proxy.uid(dc.bus_name))
+                    throw std::runtime_error("Unexpected sender UID!");
+            });
 
         obj_session_manager.run_async();
 

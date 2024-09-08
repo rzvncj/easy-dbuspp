@@ -28,10 +28,10 @@ int main()
         easydbuspp::session_manager obj_session_manager {easydbuspp::bus_type_t::SESSION, BUS_NAME};
         easydbuspp::object          object {obj_session_manager, INTERFACE_NAME, OBJECT_PATH};
 
-        easydbuspp::method_context test_mc;
+        easydbuspp::dbus_context test_dc;
 
-        object.add_method("MethodTakingAMethodContext", [&test_mc](const easydbuspp::method_context& mc) {
-            test_mc = mc;
+        object.add_method("MethodTakingAMethodContext", [&test_dc](const easydbuspp::dbus_context& dc) {
+            test_dc = dc;
         });
 
         obj_session_manager.run_async();
@@ -42,12 +42,12 @@ int main()
 
         proxy.call<void>("MethodTakingAMethodContext");
 
-        if (test_mc.bus_name != proxy.unique_bus_name())
+        if (test_dc.bus_name != proxy.unique_bus_name())
             throw std::runtime_error("Bus name mismatch (expected: " + proxy.unique_bus_name()
-                                     + ", got: " + test_mc.bus_name + ")!");
+                                     + ", got: " + test_dc.bus_name + ")!");
 
-        if (test_mc.interface_name != INTERFACE_NAME || test_mc.object_path != OBJECT_PATH
-            || test_mc.method_name != "MethodTakingAMethodContext")
+        if (test_dc.interface_name != INTERFACE_NAME || test_dc.object_path != OBJECT_PATH
+            || test_dc.name != "MethodTakingAMethodContext")
             throw std::runtime_error("Unexpected context data received!");
 
         obj_session_manager.stop();

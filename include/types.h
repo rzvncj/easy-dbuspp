@@ -32,11 +32,11 @@ namespace easydbuspp {
 
 using object_path_t = std::filesystem::path;
 
-struct method_context {
+struct dbus_context {
     std::string   bus_name;
     std::string   interface_name;
     object_path_t object_path;
-    std::string   method_name;
+    std::string   name;
 };
 
 using g_variant_ptr         = std::unique_ptr<GVariant, decltype(&g_variant_unref)>;
