@@ -63,6 +63,26 @@ object.add_method("MethodTakingAStringAndReturningBool",
 Again, that's it! The exception will simply be picked up by the library and converted into an
 error that's sent back, via the D-Bus wire, to the caller!
 
+### Returning multiple values
+
+Just return an `std::tuple` (or `std::pair` if you prefer).
+
+```cpp
+const std::tuple<int, std::string, double> EXPECTED_VALUE {42, "Life, the Universe and Everything", 3.14};
+
+object.add_method("ReturnMultipleValues", [&EXPECTED_VALUE]() {
+    return EXPECTED_VALUE;
+});
+```
+
+That will create a method with three output parameters (in D-Bus parlance):
+
+```
+ReturnMultipleValues(out i out_arg0,
+                     out s out_arg1,
+                     out d out_arg2);
+```
+
 ### Adding properties
 
 D-Bus' properties can be read-only, read-write, and read-only. The library will figure out
@@ -219,6 +239,7 @@ interface net.test.EasyDBuspp.TestInterface {
   properties:
 };
 ```
+
 
 ### Proxies: the other side of the coin
 
