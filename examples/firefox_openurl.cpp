@@ -31,11 +31,16 @@
 
 int main(int argc, char** argv)
 {
+    using namespace std::chrono_literals;
+
     try {
         if (argc < 2) {
             std::cerr << "No URL provided!\n";
             return 1;
         }
+
+        easydbuspp::bus_watcher watcher {easydbuspp::bus_type_t::SESSION, "org.mozilla.firefox.SearchProvider"};
+        watcher.wait_for(10s);
 
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
         easydbuspp::proxy proxy {proxy_session_manager, "org.mozilla.firefox.SearchProvider", "org.mozilla.firefox",

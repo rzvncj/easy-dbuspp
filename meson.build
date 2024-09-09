@@ -18,7 +18,26 @@ endif
 
 configure_file(output: 'config.h', configuration: conf)
 
-easy_dbuspp = library('easy-dbuspp',
+pkg = import('pkgconfig')
+
+install_headers(
+   'include/bus_watcher.h',
+   'include/bus_watcher.inl',
+   'include/easydbuspp.h',
+   'include/g_thread_pool.h',
+   'include/object.h',
+   'include/object.inl',
+   'include/org_freedesktop_dbus_proxy.h',
+   'include/params.h',
+   'include/proxy.h',
+   'include/proxy.inl',
+   'include/session_manager.h',
+   'include/session_manager.inl',
+   'include/type_mapping.h',
+   'include/types.h',
+)
+
+easy_dbuspp = library('easydbuspp',
    [
       'src/g_thread_pool.cpp',
       'src/object.cpp',
@@ -32,8 +51,10 @@ easy_dbuspp = library('easy-dbuspp',
       dep_gio,
       dep_threads,
    ],
-   install : true
+   install: true
 )
+
+pkg.generate(easy_dbuspp)
 
 firefox_openurl = executable('firefox_openurl',
    'examples/firefox_openurl.cpp',
