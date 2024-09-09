@@ -3,6 +3,7 @@
 
 // Convenience header.
 
+#include "bus_watcher.h"
 #include "object.h"
 #include "org_freedesktop_dbus_proxy.h"
 #include "proxy.h"

@@ -31,9 +31,6 @@ namespace easydbuspp {
 class object;
 class proxy;
 
-//! The kinds of bus to connect to.
-enum class bus_type_t { SESSION, SYSTEM };
-
 /*!
  * session_manager manages the D-Bus connection and runs (if asked to) the main loop, which makes sure
  * events such as method calls, property queries and signal deliveries are processed.

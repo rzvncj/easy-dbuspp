@@ -30,6 +30,9 @@
 
 namespace easydbuspp {
 
+//! The kinds of bus to connect to.
+enum class bus_type_t { SESSION, SYSTEM };
+
 using object_path_t = std::filesystem::path;
 
 struct dbus_context {
@@ -88,6 +91,18 @@ inline constexpr bool is_tuple_like_v = is_tuple_v<T> || is_pair_v<T>;
 
 template <typename T>
 inline constexpr bool is_map_like_v = is_map_v<T> || is_unordered_map_v<T>;
+
+inline GBusType to_g_bus_type(easydbuspp::bus_type_t bus_type)
+{
+    switch (bus_type) {
+    case easydbuspp::bus_type_t::SESSION:
+        return G_BUS_TYPE_SESSION;
+    case easydbuspp::bus_type_t::SYSTEM:
+        return G_BUS_TYPE_SYSTEM;
+    }
+
+    throw std::runtime_error("Unkown bus type - this should never happen.");
+}
 
 } // end of namespace easydbuspp
 

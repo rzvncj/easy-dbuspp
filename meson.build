@@ -24,7 +24,8 @@ easy_dbuspp = library('easy-dbuspp',
       'src/object.cpp',
       'src/proxy.cpp',
       'src/org_freedesktop_dbus_proxy.cpp',
-      'src/session_manager.cpp'
+      'src/session_manager.cpp',
+      'src/bus_watcher.cpp'
    ],
    include_directories: incdir,
    dependencies: [
