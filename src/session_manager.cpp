@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <glib-unix.h>
 #include <object.h>
 #include <session_manager.h>
 
@@ -32,8 +31,6 @@ session_manager::session_manager(bus_type_t bus_type)
 
         throw std::runtime_error("Can't connect to the bus: " + error_message);
     }
-
-    setup_main_loop();
 }
 
 session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name) : bus_name_ {bus_name}
@@ -42,14 +39,10 @@ session_manager::session_manager(bus_type_t bus_type, const std::string& bus_nam
         to_g_bus_type(bus_type), bus_name.c_str(),
         static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
         on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr);
-
-    setup_main_loop();
 }
 
 session_manager::~session_manager()
 {
-    destructor_called_ = true;
-
     if (connection_) {
         for (auto&& object_ptr : objects_)
             object_ptr->disconnect();
@@ -60,40 +53,6 @@ session_manager::~session_manager()
 
     if (connection_)
         g_object_unref(connection_);
-
-    stop();
-
-    g_main_loop_unref(loop_);
-}
-
-void session_manager::run()
-{
-    g_main_loop_run(loop_);
-}
-
-void session_manager::run_async()
-{
-    if (run_future_.valid())
-        return;
-
-    run_future_ = std::async(std::launch::async, [this] {
-        run();
-    });
-}
-
-void session_manager::wait()
-{
-    if (run_future_.valid())
-        run_future_.get();
-}
-
-void session_manager::stop()
-{
-    if (g_main_loop_is_running(loop_))
-        g_main_loop_quit(loop_);
-
-    if (!destructor_called_ && run_future_.valid())
-        run_future_.get();
 }
 
 void session_manager::attach(object* object_ptr)
@@ -110,14 +69,6 @@ void session_manager::detach(object* object_ptr)
         object_ptr->disconnect();
         objects_.erase(object_ptr);
     }
-}
-
-void session_manager::setup_main_loop()
-{
-    loop_ = g_main_loop_new(nullptr, FALSE);
-
-    g_unix_signal_add(SIGINT, stop_sighandler, loop_);
-    g_unix_signal_add(SIGTERM, stop_sighandler, loop_);
 }
 
 void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
@@ -155,16 +106,6 @@ void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* 
         throw std::runtime_error("No signal handler registered for ' + signal_name + ''!");
 
     it->second(parameters);
-}
-
-int session_manager::stop_sighandler(void* param)
-{
-    GMainLoop* loop = static_cast<GMainLoop*>(param);
-
-    if (g_main_loop_is_running(loop))
-        g_main_loop_quit(loop);
-
-    return G_SOURCE_CONTINUE;
 }
 
 } // end of namespace easydbuspp

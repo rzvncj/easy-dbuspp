@@ -25,6 +25,7 @@ install_headers(
    'include/bus_watcher.inl',
    'include/easydbuspp.h',
    'include/g_thread_pool.h',
+   'include/main_loop.h',
    'include/object.h',
    'include/object.inl',
    'include/org_freedesktop_dbus_proxy.h',
@@ -44,7 +45,8 @@ easy_dbuspp = library('easydbuspp',
       'src/proxy.cpp',
       'src/org_freedesktop_dbus_proxy.cpp',
       'src/session_manager.cpp',
-      'src/bus_watcher.cpp'
+      'src/bus_watcher.cpp',
+      'src/main_loop.cpp',
    ],
    include_directories: incdir,
    dependencies: [
@@ -142,6 +144,17 @@ test_param_names = executable('param_names',
    link_with: easy_dbuspp
 )
 test('param_names', test_param_names, is_parallel: false)
+
+test_watcher = executable('watcher',
+   'tests/watcher.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+      dep_threads,
+   ],
+   link_with: easy_dbuspp
+)
+test('watcher', test_watcher, is_parallel: false)
 
 run_target('cppcheck', command : ['cppcheck', '--enable=all',
    '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',

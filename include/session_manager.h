@@ -19,7 +19,6 @@
 
 #include "types.h"
 #include <functional>
-#include <future>
 #include <gio/gio.h>
 #include <memory>
 #include <string>
@@ -83,18 +82,6 @@ public:
     void signal_subscribe(const std::string& signal_name, C&& callable, const std::string& sender = {},
                           const std::string& interface_name = {}, const object_path_t& object_path = {});
 
-    //! Start the D-Bus event processing loop.
-    void run();
-
-    //! Start the D-Bus event processing loop asynchronously.
-    void run_async();
-
-    //! Wait for an async loop to be over.
-    void wait();
-
-    //! Stop the D-Bus event processing loop.
-    void stop();
-
 private:
     void attach(object* object_ptr);
     void detach(object* object_ptr);
@@ -121,8 +108,6 @@ private:
     std::unordered_set<object*>                       objects_;
     std::unordered_map<std::string, signal_handler_t> signal_handlers_;
     GDBusConnection*                                  connection_ {nullptr};
-    std::future<void>                                 run_future_;
-    bool                                              destructor_called_ {false};
 
     friend class object;
     friend class proxy;

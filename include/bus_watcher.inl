@@ -17,24 +17,19 @@
 #ifndef __BUS_WATCHER_INL_INCLUDED__
 #define __BUS_WATCHER_INL_INCLUDED__
 
-#include <future>
+#include <stdexcept>
 
 namespace easydbuspp {
 
 template <typename Rep, typename Period>
 void bus_watcher::wait_for(const std::chrono::duration<Rep, Period>& timeout)
 {
-    auto a = std::async(std::launch::async, [this] {
-        g_main_loop_run(loop_);
-    });
+    std::unique_lock<std::mutex> lock {name_appeared_cv_mutex_};
 
-    a.wait_for(timeout);
-
-    if (g_main_loop_is_running(loop_))
-        g_main_loop_quit(loop_);
-
-    if (a.valid())
-        a.get();
+    if (!name_appeared_cv_.wait_for(lock, timeout, [this] {
+            return name_appeared_;
+        }))
+        throw std::runtime_error("Timeout before bus name appeared!");
 }
 
 } // end of namespace easydbuspp

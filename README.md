@@ -171,15 +171,15 @@ So now every time `"TriggerBroadcastSignal"` is called, the signal gets sent out
 Now that our object has been set up, we can make it available by starting the main processing loop:
 
 ```cpp
-session_manager.run();
+easydbuspp::main_loop::instance().run();
 ```
 
 This plugs `SIGTERM` and `SIGINT` in, so doing `^C` in your terminal will shut down gracefully.
 
-If you want to start the service asynchronously, that's possible too:
+If you want to start the loop asynchronously, that's possible too:
 
 ```cpp
-session_manager.run_async();
+easydbuspp::main_loop::instance().run_async();
 ```
 
 And that's it! You can introspect and use your shiny new D-Bus object with one of a variety of

@@ -34,7 +34,7 @@ int main()
             test_dc = dc;
         });
 
-        obj_session_manager.run_async();
+        easydbuspp::main_loop::instance().run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -50,7 +50,8 @@ int main()
             || test_dc.name != "MethodTakingAMethodContext")
             throw std::runtime_error("Unexpected context data received!");
 
-        obj_session_manager.stop();
+        easydbuspp::main_loop::instance().stop();
+        easydbuspp::main_loop::instance().wait();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

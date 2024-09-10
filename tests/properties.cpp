@@ -55,7 +55,7 @@ int main()
                 return true;
             });
 
-        obj_session_manager.run_async();
+        easydbuspp::main_loop::instance().run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -126,7 +126,8 @@ int main()
         if (it1 == rw_prop_ret3.end() || it2 == rw_prop_ret3.end())
             throw std::runtime_error("'FreeJazzMusicians' (method read) is not the expected value!");
 
-        obj_session_manager.stop();
+        easydbuspp::main_loop::instance().stop();
+        easydbuspp::main_loop::instance().wait();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

@@ -16,7 +16,6 @@
 
 #include <easydbuspp.h>
 #include <iostream>
-#include <unistd.h>
 
 int main()
 {
@@ -52,7 +51,7 @@ int main()
                     throw std::runtime_error("Unexpected sender UID!");
             });
 
-        obj_session_manager.run_async();
+        easydbuspp::main_loop::instance().run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -71,7 +70,8 @@ int main()
         if (!exception_caught)
             throw std::runtime_error("'DontRunMethod' ran when it shouldn't have!");
 
-        obj_session_manager.stop();
+        easydbuspp::main_loop::instance().stop();
+        easydbuspp::main_loop::instance().wait();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

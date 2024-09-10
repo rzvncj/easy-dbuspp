@@ -16,7 +16,6 @@
 
 #include <easydbuspp.h>
 #include <iostream>
-#include <unistd.h>
 
 int main()
 {
@@ -35,7 +34,7 @@ int main()
             broadcast_signal("Done calculating PI, here's the value", 3.14);
         });
 
-        obj_session_manager.run_async();
+        easydbuspp::main_loop::instance().run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -44,14 +43,12 @@ int main()
         proxy_session_manager.signal_subscribe(
             "BroadcastSignal", [&proxy_session_manager](const std::string& s, double d) {
                 std::cout << "Got signal BroadcastSignal: [" << s << "', " << d << "]" << std::endl;
-                proxy_session_manager.stop();
+                easydbuspp::main_loop::instance().stop();
             });
-
-        proxy_session_manager.run_async();
 
         proxy.call<void>("EmitBroadcastSignal");
 
-        obj_session_manager.stop();
+        easydbuspp::main_loop::instance().wait();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

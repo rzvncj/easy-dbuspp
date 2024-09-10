@@ -16,7 +16,6 @@
 
 #include <easydbuspp.h>
 #include <iostream>
-#include <unistd.h>
 
 int main()
 {
@@ -35,7 +34,7 @@ int main()
             unicast_signal(dc.bus_name, "Unicast signal emitted!");
         });
 
-        obj_session_manager.run_async();
+        easydbuspp::main_loop::instance().run_async();
 
         // Set up a proxy to access the object.
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
@@ -46,17 +45,15 @@ int main()
 
         proxy_session_manager.signal_subscribe(
             "UnicastSignal",
-            [&proxy_session_manager](const std::string& s) {
+            [](const std::string& s) {
                 std::cout << "Got signal UnicastSignal: ['" << s << "']" << std::endl;
-                proxy_session_manager.stop();
+                easydbuspp::main_loop::instance().stop();
             },
             unique_bus_name, INTERFACE_NAME, OBJECT_PATH);
 
-        proxy_session_manager.run_async();
-
         proxy.call<void>("EmitUnicastSignal");
 
-        obj_session_manager.stop();
+        easydbuspp::main_loop::instance().wait();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

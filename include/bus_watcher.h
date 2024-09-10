@@ -19,6 +19,7 @@
 
 #include "types.h"
 #include <chrono>
+#include <condition_variable>
 #include <gio/gio.h>
 #include <string>
 
@@ -54,8 +55,10 @@ private:
                                  gpointer user_data);
 
 private:
-    GMainLoop* loop_ {nullptr};
-    guint      watcher_id_ {0};
+    std::condition_variable name_appeared_cv_;
+    std::mutex              name_appeared_cv_mutex_;
+    bool                    name_appeared_ {false};
+    guint                   watcher_id_ {0};
 };
 
 } // end of namespace easydbuspp

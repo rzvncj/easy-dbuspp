@@ -40,6 +40,9 @@ int main(int argc, char** argv)
         }
 
         easydbuspp::bus_watcher watcher {easydbuspp::bus_type_t::SESSION, "org.mozilla.firefox.SearchProvider"};
+
+        easydbuspp::main_loop::instance().run_async();
+
         watcher.wait_for(10s);
 
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
