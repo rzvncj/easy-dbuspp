@@ -497,6 +497,14 @@ Running the automated unit tests (optional), from the `build` directory:
 meson test
 ```
 
+The library can be installed with:
+
+```
+meson install
+```
+
+(You might need to be a super user for this, depending on the installation directory.)
+
 ## Built with
 
 * [glib-2](https://docs.gtk.org/glib/) - D-Bus implementation
