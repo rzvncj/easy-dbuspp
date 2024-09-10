@@ -103,7 +103,7 @@ void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* 
     auto             it      = manager->signal_handlers_.find(signal_name);
 
     if (it == manager->signal_handlers_.end())
-        throw std::runtime_error("No signal handler registered for ' + signal_name + ''!");
+        throw std::runtime_error("No signal handler registered for '"s + signal_name + "''!");
 
     it->second(parameters);
 }
