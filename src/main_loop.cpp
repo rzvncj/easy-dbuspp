@@ -18,8 +18,6 @@
 #include <main_loop.h>
 #include <stdexcept>
 
-#include <iostream>
-
 namespace easydbuspp {
 
 main_loop::main_loop()
