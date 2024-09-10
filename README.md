@@ -336,7 +336,7 @@ session_manager.signal_subscribe("BroadcastSignal", [&session_manager](int i, co
 Then we could just run the main processing loop in a different thread:
 
 ```cpp
-session_manager.run_async();
+easydbuspp::main_loop::instance().run_async();
 ```
 
 leaving the main thread free to trigger the signal:
