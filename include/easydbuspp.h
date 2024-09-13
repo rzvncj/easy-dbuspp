@@ -4,6 +4,7 @@
 // Convenience header.
 
 #include "bus_watcher.h"
+#include "idle_detector.h"
 #include "main_loop.h"
 #include "object.h"
 #include "org_freedesktop_dbus_proxy.h"

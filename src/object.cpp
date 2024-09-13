@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <idle_detector.h>
 #include <object.h>
 #include <stdexcept>
 
@@ -96,6 +97,8 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 
     thread_pool_.push(new std::function<void()> {[=] {
         try {
+            idle_detector::instance().ping();
+
             object* obj_ptr = static_cast<object*>(user_data);
 
             auto it = obj_ptr->methods_.find(method_name);
@@ -124,6 +127,8 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
     using namespace std::string_literals;
 
     try {
+        idle_detector::instance().ping();
+
         object* obj_ptr = static_cast<object*>(user_data);
 
         auto it = obj_ptr->properties_.find(property_name);
@@ -158,6 +163,8 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
     using namespace std::string_literals;
 
     try {
+        idle_detector::instance().ping();
+
         object* obj_ptr = static_cast<object*>(user_data);
 
         auto it = obj_ptr->properties_.find(property_name);

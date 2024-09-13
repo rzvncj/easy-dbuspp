@@ -25,6 +25,8 @@ install_headers(
    'include/bus_watcher.inl',
    'include/easydbuspp.h',
    'include/g_thread_pool.h',
+   'include/idle_detector.h',
+   'include/idle_detector.inl',
    'include/main_loop.h',
    'include/object.h',
    'include/object.inl',
@@ -47,6 +49,7 @@ easy_dbuspp = library('easydbuspp',
       'src/session_manager.cpp',
       'src/bus_watcher.cpp',
       'src/main_loop.cpp',
+      'src/idle_detector.cpp',
    ],
    include_directories: incdir,
    dependencies: [
@@ -60,6 +63,16 @@ pkg.generate(easy_dbuspp)
 
 firefox_openurl = executable('firefox_openurl',
    'examples/firefox_openurl.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+      dep_threads,
+   ],
+   link_with: easy_dbuspp
+)
+
+idle_detect = executable('idle_detect',
+   'examples/idle_detect.cpp',
    include_directories: incdir,
    dependencies: [
       dep_gio,
