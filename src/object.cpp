@@ -110,8 +110,12 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
             if (obj_ptr->pre_request_handler_)
                 obj_ptr->pre_request_handler_(request_type::METHOD, context);
 
-            GVariant* ret = it->second(parameters, context);
-            g_dbus_method_invocation_return_value(invocation, ret);
+            GDBusMessage* message = g_dbus_method_invocation_get_message(invocation);
+            GUnixFDList*  fd_list = g_dbus_message_get_unix_fd_list(message);
+
+            auto [ret, out_fd_list] = it->second(parameters, fd_list, context);
+            g_unix_fd_list_ptr out_fd_list_raii_holder {out_fd_list, g_object_unref};
+            g_dbus_method_invocation_return_value_with_unix_fd_list(invocation, ret, out_fd_list);
 
         } catch (const std::exception& e) {
             const std::string error_name {std::string {interface_name} + ".MethodError"};

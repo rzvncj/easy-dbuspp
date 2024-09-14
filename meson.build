@@ -81,6 +81,26 @@ idle_detect = executable('idle_detect',
    link_with: easy_dbuspp
 )
 
+unix_fd_object = executable('unix_fd_object',
+   'examples/unix_fd_object.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+      dep_threads,
+   ],
+   link_with: easy_dbuspp
+)
+
+unix_fd_proxy = executable('unix_fd_proxy',
+   'examples/unix_fd_proxy.cpp',
+   include_directories: incdir,
+   dependencies: [
+      dep_gio,
+      dep_threads,
+   ],
+   link_with: easy_dbuspp
+)
+
 test_methods = executable('methods',
    'tests/methods.cpp',
    include_directories: incdir,

@@ -83,13 +83,14 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
     method_xml += "  </method>\n";
     methods_xml_ += method_xml;
 
-    return [callable](GVariant* parameters, const dbus_context& context) {
+    return [callable](GVariant* parameters, GUnixFDList* fd_list, const dbus_context& context) {
         std::tuple<std::decay_t<A>...> fn_args;
         gsize                          arg_index {0};
+        gint                           fd_index {0};
 
         // Initialize the tuple
         std::apply(
-            [parameters, &arg_index, &context](auto&&... args) {
+            [parameters, &arg_index, fd_list, &fd_index, &context](auto&&... args) {
                 (
                     [&]() {
                         if constexpr (std::is_same_v<std::decay_t<decltype(args)>, dbus_context>)
@@ -101,16 +102,21 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
             },
             fn_args);
 
+        set_up_from_g_unix_fd_list(fd_list, fn_args);
+
         if constexpr (!std::is_void_v<R>) {
-            if constexpr (is_tuple_like_v<R>)
-                return to_gvariant(std::apply(callable, fn_args));
-            else {
-                std::tuple<R> wrapper {std::apply(callable, fn_args)};
-                return to_gvariant(wrapper);
+            if constexpr (is_tuple_like_v<R>) {
+                auto ret         = std::apply(callable, fn_args);
+                auto out_fd_list = extract_g_unix_fd_list(ret);
+                return std::make_pair(to_gvariant(ret), out_fd_list);
+            } else {
+                auto wrapper     = std::tuple {std::apply(callable, fn_args)};
+                auto out_fd_list = extract_g_unix_fd_list(wrapper);
+                return std::make_pair(to_gvariant(wrapper), out_fd_list);
             }
         } else {
             std::apply(callable, fn_args);
-            return nullptr;
+            return std::make_pair(nullptr, nullptr);
         }
     };
 }

@@ -47,6 +47,8 @@ std::string to_dbus_type_string()
         return "d";
     else if constexpr (decay_same_v<T, std::byte>)
         return "y";
+    else if constexpr (decay_same_v<T, unix_fd_t>)
+        return "h";
     else if constexpr (decay_same_v<T, std::string> || decay_same_v<T, const char*>)
         return "s";
     else if constexpr (decay_same_v<T, object_path_t>)

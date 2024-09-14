@@ -49,6 +49,8 @@ std::decay_t<T> from_gvariant(GVariant* v)
         return g_variant_get_boolean(v);
     else if constexpr (decay_same_v<T, std::byte>)
         return std::byte {g_variant_get_byte(v)};
+    else if constexpr (decay_same_v<T, unix_fd_t>)
+        return unix_fd_t {g_variant_get_handle(v)};
     else if constexpr (decay_same_v<T, std::string> || decay_same_v<T, object_path_t>)
         return g_variant_get_string(v, nullptr);
     else if constexpr (is_tuple_like_v<T>) {
@@ -152,6 +154,8 @@ GVariant* to_gvariant(T t)
         return g_variant_new(to_dbus_type_string(t).c_str(), t);
     else if constexpr (decay_same_v<T, std::byte>)
         return g_variant_new(to_dbus_type_string(t).c_str(), std::to_integer<uint8_t>(t));
+    else if constexpr (decay_same_v<T, unix_fd_t>)
+        return g_variant_new(to_dbus_type_string(t).c_str(), static_cast<gint32>(t));
     else if constexpr (decay_same_v<T, std::string>)
         return g_variant_new(to_dbus_type_string(t).c_str(), t.c_str());
     else if constexpr (decay_same_v<T, object_path_t>)
@@ -199,6 +203,67 @@ GVariant* to_gvariant(T t)
         return g_variant_builder_end(builder.get());
     } else
         throw std::runtime_error {"Don't know how to create a GVariant from "s + typeid(T).name() + "!"};
+}
+
+template <typename... A>
+GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
+{
+    g_unix_fd_list_ptr fd_list {nullptr, g_object_unref};
+    gint32             fd_list_index {0};
+
+    std::apply(
+        [&](auto&&... args) {
+            (
+                [&]() {
+                    if constexpr (std::is_same_v<std::decay_t<decltype(args)>, unix_fd_t>) {
+                        if (!fd_list)
+                            fd_list.reset(g_unix_fd_list_new());
+
+                        GError* error {nullptr};
+
+                        g_unix_fd_list_append(fd_list.get(), static_cast<gint32>(args), &error);
+                        args = unix_fd_t {fd_list_index++};
+
+                        if (error) {
+                            std::string error_message = error->message;
+                            g_error_free(error);
+
+                            throw std::runtime_error("Could not add UNIX fd: " + error_message);
+                        }
+                    }
+                }(),
+                ...);
+        },
+        input);
+
+    return fd_list.release();
+}
+
+template <typename... A>
+void set_up_from_g_unix_fd_list(GUnixFDList* fd_list, std::tuple<A...>& inout)
+{
+    std::apply(
+        [&](auto&&... args) {
+            (
+                [&]() {
+                    if constexpr (std::is_same_v<std::decay_t<decltype(args)>, unix_fd_t>) {
+                        if (!fd_list)
+                            throw std::runtime_error("UNIX fd parameter encountered but no fd list received!");
+
+                        GError* error {nullptr};
+                        args = unix_fd_t {g_unix_fd_list_get(fd_list, static_cast<gint32>(args), &error)};
+
+                        if (error) {
+                            std::string error_message = error->message;
+                            g_error_free(error);
+
+                            throw std::runtime_error("Could not extract UNIX fd: " + error_message);
+                        }
+                    }
+                }(),
+                ...);
+        },
+        inout);
 }
 
 } // end of namespace easydbuspp

@@ -24,10 +24,16 @@ R proxy::call(const std::string& method_name, A... parameters) const
 {
     std::tuple<std::decay_t<A>...> fn_args {parameters...};
     GError*                        error {nullptr};
+    GUnixFDList*                   out_fd_list {nullptr};
 
-    g_variant_ptr result {g_dbus_proxy_call_sync(proxy_, method_name.c_str(), to_gvariant(fn_args),
-                                                 G_DBUS_CALL_FLAGS_NONE, -1, nullptr, &error),
+    g_unix_fd_list_ptr fd_list {extract_g_unix_fd_list(fn_args), g_object_unref};
+
+    g_variant_ptr result {g_dbus_proxy_call_with_unix_fd_list_sync(proxy_, method_name.c_str(), to_gvariant(fn_args),
+                                                                   G_DBUS_CALL_FLAGS_NONE, -1, fd_list.get(),
+                                                                   &out_fd_list, nullptr, &error),
                           g_variant_unref};
+
+    g_unix_fd_list_ptr out_fd_list_raii_holder {out_fd_list, g_object_unref};
 
     if (!result) {
         std::string error_message = error->message;
@@ -37,10 +43,15 @@ R proxy::call(const std::string& method_name, A... parameters) const
     }
 
     if constexpr (!std::is_void_v<R>) {
-        if constexpr (is_tuple_like_v<R>)
-            return from_gvariant<R>(result.get());
-        else
-            return std::get<0>(from_gvariant<std::tuple<R>>(result.get()));
+        if constexpr (is_tuple_like_v<R>) {
+            auto ret = from_gvariant<R>(result.get());
+            set_up_from_g_unix_fd_list(out_fd_list, ret);
+            return ret;
+        } else {
+            auto ret = from_gvariant<std::tuple<R>>(result.get());
+            set_up_from_g_unix_fd_list(out_fd_list, ret);
+            return std::get<0>(ret);
+        }
     }
 }
 

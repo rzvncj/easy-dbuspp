@@ -36,7 +36,8 @@ class session_manager;
  */
 class object {
 
-    using method_handler_t         = std::function<GVariant*(GVariant*, const dbus_context&)>;
+    using method_handler_t
+        = std::function<std::pair<GVariant*, GUnixFDList*>(GVariant*, GUnixFDList*, const dbus_context&)>;
     using property_read_handler_t  = std::function<GVariant*()>;
     using property_write_handler_t = std::function<gboolean(GVariant*)>;
 

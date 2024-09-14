@@ -35,6 +35,8 @@ enum class bus_type_t { SESSION, SYSTEM };
 
 using object_path_t = std::filesystem::path;
 
+enum class unix_fd_t : gint32 {};
+
 struct dbus_context {
     std::string   bus_name;
     std::string   interface_name;
@@ -45,6 +47,7 @@ struct dbus_context {
 using g_variant_ptr         = std::unique_ptr<GVariant, decltype(&g_variant_unref)>;
 using g_variant_builder_ptr = std::unique_ptr<GVariantBuilder, decltype(&g_variant_builder_unref)>;
 using g_dbus_node_info_ptr  = std::unique_ptr<GDBusNodeInfo, decltype(&g_dbus_node_info_unref)>;
+using g_unix_fd_list_ptr    = std::unique_ptr<GUnixFDList, decltype(&g_object_unref)>;
 
 template <typename U, typename V>
 constexpr bool decay_same_v = std::is_same_v<std::decay_t<U>, V>;
