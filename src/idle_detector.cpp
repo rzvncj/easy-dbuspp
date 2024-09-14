@@ -20,8 +20,8 @@ namespace easydbuspp {
 
 idle_detector::~idle_detector()
 {
-    // TODO: I'm betting that the future::get() call in stop() won't throw.
-    stop();
+    // TODO: I'm betting that the future::get() call in disable() won't throw.
+    disable();
 }
 
 idle_detector& idle_detector::instance()
@@ -30,7 +30,7 @@ idle_detector& idle_detector::instance()
     return the_instance;
 }
 
-void idle_detector::stop()
+void idle_detector::disable()
 {
     if (!idle_future_.valid())
         return;

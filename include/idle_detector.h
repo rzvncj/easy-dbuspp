@@ -50,10 +50,10 @@ public:
      * @throw         std::runtime_error
      */
     template <typename Rep, typename Period>
-    void start(const std::chrono::duration<Rep, Period>& timeout);
+    void enable(const std::chrono::duration<Rep, Period>& timeout);
 
     //! Stops the idle detector thread, if it's running.
-    void stop();
+    void disable();
 
     //! Resets the timeout. Every time this function gets called, the timer resets to timeout again.
     void ping();

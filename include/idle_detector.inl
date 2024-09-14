@@ -23,7 +23,7 @@
 namespace easydbuspp {
 
 template <typename Rep, typename Period>
-void idle_detector::start(const std::chrono::duration<Rep, Period>& timeout)
+void idle_detector::enable(const std::chrono::duration<Rep, Period>& timeout)
 {
     if (idle_future_.valid())
         throw std::runtime_error("Idle detector already running!");

@@ -33,7 +33,7 @@ int main()
         object.add_method("CallBeforeItsTooLate", [] {
         });
 
-        easydbuspp::idle_detector::instance().start(30s);
+        easydbuspp::idle_detector::instance().enable(30s);
         easydbuspp::main_loop::instance().run();
 
     } catch (const std::exception& e) {
