@@ -32,7 +32,7 @@ void idle_detector::enable(const std::chrono::duration<Rep, Period>& timeout)
 
     idle_future_ = std::async(std::launch::async, [this, timeout] {
         for (;;) {
-            std::unique_lock lock {idle_cv_mutex_};
+            std::unique_lock lock {idle_mutex_};
 
             if (!idle_cv_.wait_for(lock, timeout, [this] {
                     return request_ping_ || stop_;

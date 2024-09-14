@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <idle_detector.h>
+#include <object.h>
 
 namespace easydbuspp {
 
@@ -36,7 +37,7 @@ void idle_detector::disable()
         return;
 
     {
-        std::lock_guard lock(idle_cv_mutex_);
+        std::lock_guard lock(idle_mutex_);
         stop_ = true;
     }
 
@@ -46,17 +47,28 @@ void idle_detector::disable()
         idle_future_.get();
 }
 
-void idle_detector::ping()
+void idle_detector::ping(const object_path_t& object_path)
 {
     if (!idle_future_.valid())
         return;
 
     {
-        std::lock_guard lock(idle_cv_mutex_);
+        std::lock_guard lock(idle_mutex_);
+
+        if (excluded_objects_.find(object_path) != excluded_objects_.end())
+            return;
+
         request_ping_ = true;
     }
 
     idle_cv_.notify_all();
+}
+
+void idle_detector::exclude(const object& obj)
+{
+    std::lock_guard lock(idle_mutex_);
+
+    excluded_objects_.insert(obj.object_path());
 }
 
 } // end of namespace easydbuspp

@@ -17,12 +17,16 @@
 #ifndef __IDLE_DETECTOR_H_INCLUDED__
 #define __IDLE_DETECTOR_H_INCLUDED__
 
+#include "types.h"
 #include <chrono>
 #include <condition_variable>
 #include <future>
 #include <mutex>
+#include <set>
 
 namespace easydbuspp {
+
+class object;
 
 /*!
  * When no requests have come to the managed object in a specified timeframe,
@@ -56,7 +60,10 @@ public:
     void disable();
 
     //! Resets the timeout. Every time this function gets called, the timer resets to timeout again.
-    void ping();
+    void ping(const object_path_t& object_path);
+
+    //! Don't reset the timeout on pings from this object.
+    void exclude(const object& obj);
 
 public:
     //! Return the unique, per-process instance.
@@ -64,10 +71,11 @@ public:
 
 private:
     std::condition_variable idle_cv_;
-    std::mutex              idle_cv_mutex_;
+    std::mutex              idle_mutex_;
     bool                    request_ping_ {false};
     bool                    stop_ {false};
     std::future<void>       idle_future_;
+    std::set<object_path_t> excluded_objects_;
 };
 
 } // end of namespace easydbuspp
