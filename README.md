@@ -482,6 +482,11 @@ receiving requests, add it to the excluded list:
 easydbuspp::idle_detector::instance().exclude(obj);
 ```
 
+### Passing UNIX file descriptors between processes
+
+The library supports passing UNIX file descriptors by using the custom `easydbuspp::unix_fd_t`
+type for method parameters and return values. Nothing else is necessary.
+
 ## D-Bus $\leftrightarrow$ C++ type mapping
 
 | D-Bus         | C++                              |
