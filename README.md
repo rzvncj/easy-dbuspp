@@ -46,6 +46,9 @@ That's it! Now whenever something calls `MethodTakingAStringAndReturningBool` vi
 library automatically invokes your lambda and does all the legwork of packing the returned
 value and sending it back to the caller. You don't have to know anyting else!
 
+**Internally, the library uses a thread pool for running methods, so methods will run in
+parallel. If you need to use synchronization inside them in light of that fact, please do.**
+
 ### Reporting errors
 
 Errors are simply reported by throwing an `std::exception`-derived exception. For example, say
