@@ -463,6 +463,25 @@ object.pre_request_handler(
     });
 ```
 
+### The idle detector
+
+By default, your application will run until you stop the main loop. But it is possible
+to have it stop automatically if no D-Bus requests occur within a given timeframe.
+
+If you want that to happen, all you have to do is enable the included idle detector
+Here's an example, with a 30 seconds timeout (timeouts are `std::chrono::duration`s):
+
+```cpp
+easydbuspp::idle_detector::instance().enable(30s);
+```
+
+If, for some reason, you want the application to stop even if a particular object keeps
+receiving requests, add it to the excluded list:
+
+```cpp
+easydbuspp::idle_detector::instance().exclude(obj);
+```
+
 ## D-Bus $\leftrightarrow$ C++ type mapping
 
 | D-Bus         | C++                              |
