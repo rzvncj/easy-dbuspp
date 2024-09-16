@@ -19,6 +19,8 @@
 
 #include "type_mapping.h"
 #include "types.h"
+#include <gio/gunixfdlist.h>
+#include <glib-unix.h>
 #include <stdexcept>
 
 namespace easydbuspp {

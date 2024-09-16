@@ -5,7 +5,10 @@ project('easy-dbuspp',
     version: '0',
     meson_version: '>= 0.58')
 
-dep_gio = dependency('gio-2.0')
+dep_gio = [
+   dependency('gio-2.0'),
+   dependency('gio-unix-2.0')
+]
 dep_threads = dependency('threads')
 
 incdir = include_directories('include')
