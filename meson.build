@@ -6,6 +6,10 @@ project('easy-dbuspp',
     meson_version: '>= 0.58')
 
 compiler = meson.get_compiler('cpp')
+if compiler.get_id() == 'gcc' and compiler.version().version_compare('<10.0')
+    message('GCC compiler version < 10 found, adding "-lstdc++fs" linking flag')
+    add_project_link_arguments(['-lstdc++fs'], language: 'cpp')
+endif
 
 dep_gio = [
    dependency('gio-2.0'),
