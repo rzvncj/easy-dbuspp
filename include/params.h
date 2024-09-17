@@ -127,7 +127,7 @@ template <typename... Types>
 void extract(GVariant* v, std::variant<Types...>& out)
 {
     (
-        [&]() {
+        [&] {
             if (g_variant_is_of_type(v, to_dbus_type<Types>()))
                 out = from_gvariant<Types>(v);
         }(),
@@ -211,7 +211,7 @@ GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
     g_unix_fd_list_ptr fd_list {nullptr, g_object_unref};
     gint32             fd_list_index {0};
 
-    auto extract = [&](auto& arg) {
+    auto extract_arg = [&](auto& arg) {
         if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, unix_fd_t>) {
             if (!fd_list)
                 fd_list.reset(g_unix_fd_list_new());
@@ -231,8 +231,8 @@ GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
     };
 
     std::apply(
-        [&extract](auto&&... args) {
-            ((extract(args)), ...);
+        [&extract_arg](auto&&... args) {
+            ((extract_arg(args)), ...);
         },
         input);
 
