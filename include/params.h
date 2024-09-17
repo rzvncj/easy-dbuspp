@@ -25,8 +25,8 @@
 
 namespace easydbuspp {
 
-template <typename V, std::size_t Index>
-std::decay_t<V> extract_std_variant(GVariant* v);
+template <typename... Types>
+void extract(GVariant* v, std::variant<Types...>& out);
 
 template <typename T>
 std::decay_t<T> from_gvariant(GVariant* v)
@@ -115,25 +115,23 @@ std::decay_t<T> from_gvariant(GVariant* v)
 
         return ret;
     } else if constexpr (is_variant_v<T>) {
-        g_variant_ptr child_value {g_variant_get_child_value(v, 0), g_variant_unref};
-        return extract_std_variant<T>(child_value.get());
+        g_variant_ptr   child_value {g_variant_get_child_value(v, 0), g_variant_unref};
+        std::decay_t<T> ret;
+        extract(child_value.get(), ret);
+        return ret;
     } else
         throw std::runtime_error {"Don't know how to extract "s + typeid(T).name() + " from a GVariant!"};
 }
 
-template <typename V, std::size_t Index = 0>
-std::decay_t<V> extract_std_variant(GVariant* v)
+template <typename... Types>
+void extract(GVariant* v, std::variant<Types...>& out)
 {
-    using variant_t = std::decay_t<V>;
-
-    if constexpr (Index < std::variant_size_v<variant_t>) {
-        if (g_variant_is_of_type(v, to_dbus_type<std::variant_alternative_t<Index, variant_t>>()))
-            return from_gvariant<std::variant_alternative_t<Index, variant_t>>(v);
-
-        return extract_std_variant<V, Index + 1>(v);
-    }
-
-    throw std::runtime_error {"No std::variant<> type matched the GVariant!"};
+    (
+        [&]() {
+            if (g_variant_is_of_type(v, to_dbus_type<Types>()))
+                out = from_gvariant<Types>(v);
+        }(),
+        ...);
 }
 
 template <typename T>
