@@ -7,10 +7,6 @@ project('easy-dbuspp',
 
 compiler = meson.get_compiler('cpp')
 
-if compiler.get_id() == 'gcc' and compiler.version().version_compare('<12')
-   error('This needs GCC version 12 or above, got version', compiler.version())
-endif
-
 dep_gio = [
    dependency('gio-2.0'),
    dependency('gio-unix-2.0')

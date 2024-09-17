@@ -88,17 +88,17 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
         gsize                          arg_index {0};
         gint                           fd_index {0};
 
+        auto init = [parameters, &arg_index, fd_list, &fd_index, &context](auto& arg) {
+            if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, dbus_context>)
+                arg = context;
+            else
+                arg = extract<decltype(arg)>(parameters, arg_index++);
+        };
+
         // Initialize the tuple
         std::apply(
-            [parameters, &arg_index, fd_list, &fd_index, &context](auto&&... args) {
-                (
-                    [&]() {
-                        if constexpr (std::is_same_v<std::decay_t<decltype(args)>, dbus_context>)
-                            args = context;
-                        else
-                            args = extract<decltype(args)>(parameters, arg_index++);
-                    }(),
-                    ...);
+            [&init](auto&&... args) {
+                ((init(args)), ...);
             },
             fn_args);
 

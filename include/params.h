@@ -211,28 +211,28 @@ GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
     g_unix_fd_list_ptr fd_list {nullptr, g_object_unref};
     gint32             fd_list_index {0};
 
+    auto extract = [&](auto& arg) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, unix_fd_t>) {
+            if (!fd_list)
+                fd_list.reset(g_unix_fd_list_new());
+
+            GError* error {nullptr};
+
+            g_unix_fd_list_append(fd_list.get(), static_cast<gint32>(arg), &error);
+            arg = unix_fd_t {fd_list_index++};
+
+            if (error) {
+                std::string error_message = error->message;
+                g_error_free(error);
+
+                throw std::runtime_error("Could not add UNIX fd: " + error_message);
+            }
+        }
+    };
+
     std::apply(
-        [&](auto&&... args) {
-            (
-                [&]() {
-                    if constexpr (std::is_same_v<std::decay_t<decltype(args)>, unix_fd_t>) {
-                        if (!fd_list)
-                            fd_list.reset(g_unix_fd_list_new());
-
-                        GError* error {nullptr};
-
-                        g_unix_fd_list_append(fd_list.get(), static_cast<gint32>(args), &error);
-                        args = unix_fd_t {fd_list_index++};
-
-                        if (error) {
-                            std::string error_message = error->message;
-                            g_error_free(error);
-
-                            throw std::runtime_error("Could not add UNIX fd: " + error_message);
-                        }
-                    }
-                }(),
-                ...);
+        [&extract](auto&&... args) {
+            ((extract(args)), ...);
         },
         input);
 
@@ -242,26 +242,26 @@ GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
 template <typename... A>
 void set_up_from_g_unix_fd_list(GUnixFDList* fd_list, std::tuple<A...>& inout)
 {
+    auto set_up = [&](auto& arg) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, unix_fd_t>) {
+            if (!fd_list)
+                throw std::runtime_error("UNIX fd parameter encountered but no fd list received!");
+
+            GError* error {nullptr};
+            arg = unix_fd_t {g_unix_fd_list_get(fd_list, static_cast<gint32>(arg), &error)};
+
+            if (error) {
+                std::string error_message = error->message;
+                g_error_free(error);
+
+                throw std::runtime_error("Could not extract UNIX fd: " + error_message);
+            }
+        }
+    };
+
     std::apply(
-        [&](auto&&... args) {
-            (
-                [&]() {
-                    if constexpr (std::is_same_v<std::decay_t<decltype(args)>, unix_fd_t>) {
-                        if (!fd_list)
-                            throw std::runtime_error("UNIX fd parameter encountered but no fd list received!");
-
-                        GError* error {nullptr};
-                        args = unix_fd_t {g_unix_fd_list_get(fd_list, static_cast<gint32>(args), &error)};
-
-                        if (error) {
-                            std::string error_message = error->message;
-                            g_error_free(error);
-
-                            throw std::runtime_error("Could not extract UNIX fd: " + error_message);
-                        }
-                    }
-                }(),
-                ...);
+        [&set_up](auto&&... args) {
+            ((set_up(args)), ...);
         },
         inout);
 }
