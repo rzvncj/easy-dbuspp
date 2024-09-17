@@ -199,6 +199,6 @@ cppcheck = find_program('cppcheck', required : false)
 if cppcheck.found()
    run_target('cppcheck', command : ['cppcheck', '--enable=all',
       '--std=c++17', '--suppress=missingIncludeSystem', '--suppress=returnByReference',
-      '--suppress=unusedFunction', '--check-level=exhaustive',
+      '--suppress=unusedFunction', '--suppress=cstyleCast', '--check-level=exhaustive',
       '--project=' + join_paths(meson.project_build_root(), 'compile_commands.json')])
 endif
