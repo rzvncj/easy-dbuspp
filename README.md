@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: © 2024 Răzvan Cojocaru <rzvncj@gmail.com>
+
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # easy-dbuspp
 
 Modern C++ D-Bus wrapper.

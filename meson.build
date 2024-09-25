@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2024 Răzvan Cojocaru <rzvncj@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 project('easy-dbuspp',
     'cpp',
     default_options: [ 'cpp_std=c++17', 'werror=true', 'cpp_args=-W -Wall' ],
