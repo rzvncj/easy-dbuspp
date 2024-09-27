@@ -96,15 +96,15 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
             if constexpr (is_tuple_like_v<R>) {
                 auto ret         = std::apply(callable, fn_args);
                 auto out_fd_list = extract_g_unix_fd_list(ret);
-                return std::make_pair(to_gvariant(ret), out_fd_list);
+                return std::pair {to_gvariant(ret), out_fd_list};
             } else {
                 auto wrapper     = std::tuple {std::apply(callable, fn_args)};
                 auto out_fd_list = extract_g_unix_fd_list(wrapper);
-                return std::make_pair(to_gvariant(wrapper), out_fd_list);
+                return std::pair {to_gvariant(wrapper), out_fd_list};
             }
         } else {
             std::apply(callable, fn_args);
-            return std::make_pair(nullptr, nullptr);
+            return std::pair {nullptr, nullptr};
         }
     };
 }
@@ -228,8 +228,8 @@ void object::add_property(const std::string& name, const std::function<T()>& get
         return ret;
     };
 
-    properties_[name] = std::make_pair(getter ? read_lambda : property_read_handler_t {},
-                                       setter ? write_lambda : property_write_handler_t {});
+    properties_[name] = std::pair {getter ? read_lambda : property_read_handler_t {},
+                                   setter ? write_lambda : property_write_handler_t {}};
 }
 
 } // end of namespace easydbuspp
