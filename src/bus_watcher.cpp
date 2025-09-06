@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 #include <bus_watcher.h>
-#include <stdexcept>
 
 namespace easydbuspp {
 
