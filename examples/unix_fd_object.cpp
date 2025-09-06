@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#include <algorithm>
 #include <easydbuspp.h>
 #include <iostream>
 #include <unistd.h>
