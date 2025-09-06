@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 #include <org_freedesktop_dbus_proxy.h>
-#include <stdexcept>
 
 namespace easydbuspp {
 

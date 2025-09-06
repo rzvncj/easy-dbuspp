@@ -4,7 +4,6 @@
 
 #include <glib-unix.h>
 #include <main_loop.h>
-#include <stdexcept>
 
 namespace easydbuspp {
 
