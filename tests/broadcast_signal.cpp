@@ -29,7 +29,7 @@ int main()
         easydbuspp::proxy           proxy {proxy_session_manager, BUS_NAME, INTERFACE_NAME, OBJECT_PATH};
 
         proxy_session_manager.signal_subscribe(
-            "BroadcastSignal", [&proxy_session_manager](const std::string& s, double d) {
+            "BroadcastSignal", [](const std::string& s, double d) {
                 std::cout << "Got signal BroadcastSignal: [" << s << "', " << d << "]" << std::endl;
                 easydbuspp::main_loop::instance().stop();
             });
