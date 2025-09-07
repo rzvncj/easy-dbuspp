@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
-#include <variant>
 
 namespace easydbuspp {
 
