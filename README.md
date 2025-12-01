@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: © 2024 Răzvan Cojocaru <rzvncj@gmail.com>
+SPDX-FileCopyrightText: © 2024 Răzvan Cojocaru <razvanc@mailbox.org>
 
 SPDX-License-Identifier: AGPL-3.0-only
 -->
