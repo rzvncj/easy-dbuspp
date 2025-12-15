@@ -7,10 +7,10 @@
 namespace easydbuspp {
 
 bus_watcher::bus_watcher(bus_type_t bus_type, const std::string& bus_name, bool start)
+    : watcher_id_ {g_bus_watch_name(to_g_bus_type(bus_type), bus_name.c_str(),
+                                    start ? G_BUS_NAME_WATCHER_FLAGS_AUTO_START : G_BUS_NAME_WATCHER_FLAGS_NONE,
+                                    on_name_appeared, on_name_disappeared, this, nullptr)}
 {
-    watcher_id_ = g_bus_watch_name(to_g_bus_type(bus_type), bus_name.c_str(),
-                                   start ? G_BUS_NAME_WATCHER_FLAGS_AUTO_START : G_BUS_NAME_WATCHER_FLAGS_NONE,
-                                   on_name_appeared, on_name_disappeared, this, nullptr);
 }
 
 bus_watcher::~bus_watcher()

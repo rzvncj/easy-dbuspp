@@ -81,7 +81,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 {
     using namespace std::string_literals;
 
-    dbus_context context {sender, interface_name, object_path, method_name};
+    const dbus_context context {sender, interface_name, object_path, method_name};
 
     thread_pool_.push(new std::function<void()> {[=] {
         try {
@@ -135,7 +135,7 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
             throw std::runtime_error("Property '"s + property_name + "' for object '"
                                      + obj_ptr->object_path_.generic_string() + "' cannot be read!");
 
-        dbus_context context {sender, interface_name, object_path, property_name};
+        const dbus_context context {sender, interface_name, object_path, property_name};
 
         if (obj_ptr->pre_request_handler_)
             obj_ptr->pre_request_handler_(request_type::GET_PROPERTY, context);
