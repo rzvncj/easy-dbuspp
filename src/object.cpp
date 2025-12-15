@@ -85,7 +85,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 
     thread_pool_.push(new std::function<void()> {[=] {
         try {
-            object* obj_ptr = static_cast<object*>(user_data);
+            auto* obj_ptr = static_cast<object*>(user_data);
 
             idle_detector::instance().ping(obj_ptr->object_path());
 
@@ -102,7 +102,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
             GUnixFDList*  fd_list = g_dbus_message_get_unix_fd_list(message);
 
             auto [ret, out_fd_list] = it->second(parameters, fd_list, context);
-            g_unix_fd_list_ptr out_fd_list_raii_holder {out_fd_list, g_object_unref};
+            const g_unix_fd_list_ptr out_fd_list_raii_holder {out_fd_list, g_object_unref};
             g_dbus_method_invocation_return_value_with_unix_fd_list(invocation, ret, out_fd_list);
 
         } catch (const std::exception& e) {
@@ -155,7 +155,7 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
     using namespace std::string_literals;
 
     try {
-        object* obj_ptr = static_cast<object*>(user_data);
+        auto* obj_ptr = static_cast<object*>(user_data);
 
         idle_detector::instance().ping(obj_ptr->object_path());
 
@@ -171,7 +171,7 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
             throw std::runtime_error("Property '"s + property_name + "' for object '"
                                      + obj_ptr->object_path_.generic_string() + "' is read only!");
 
-        dbus_context context {sender, interface_name, object_path, property_name};
+        const dbus_context context {sender, interface_name, object_path, property_name};
 
         if (obj_ptr->pre_request_handler_)
             obj_ptr->pre_request_handler_(request_type::SET_PROPERTY, context);
@@ -194,7 +194,7 @@ void object::g_thread_pool_function(gpointer data, gpointer /* user_data */)
 
 void object::emit_properties_update_signal(const std::string& property_name, GVariant* value) const
 {
-    g_variant_builder_ptr builder {g_variant_builder_new(G_VARIANT_TYPE_ARRAY), g_variant_builder_unref};
+    const g_variant_builder_ptr builder {g_variant_builder_new(G_VARIANT_TYPE_ARRAY), g_variant_builder_unref};
     g_variant_builder_add(builder.get(), "{sv}", property_name.c_str(), value);
     GVariant* property_update = g_variant_new("(sa{sv}as)", interface_name_.c_str(), builder.get(), nullptr);
 

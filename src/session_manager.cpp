@@ -21,12 +21,13 @@ session_manager::session_manager(bus_type_t bus_type)
     }
 }
 
-session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name) : bus_name_ {bus_name}
+session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name)
+    : owner_id_ {g_bus_own_name(
+          to_g_bus_type(bus_type), bus_name.c_str(),
+          static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
+          on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr)},
+      bus_name_ {bus_name}
 {
-    owner_id_ = g_bus_own_name(
-        to_g_bus_type(bus_type), bus_name.c_str(),
-        static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
-        on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr);
 }
 
 session_manager::~session_manager()
@@ -61,8 +62,8 @@ void session_manager::detach(object* object_ptr)
 
 void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    session_manager* manager = static_cast<session_manager*>(user_data);
-    manager->connection_     = connection;
+    auto* manager        = static_cast<session_manager*>(user_data);
+    manager->connection_ = connection;
 
     for (auto&& obj_ptr : manager->objects_)
         obj_ptr->connect();
@@ -70,14 +71,14 @@ void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* 
 
 void session_manager::on_name_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    session_manager* manager = static_cast<session_manager*>(user_data);
-    manager->connection_     = connection;
+    auto* manager        = static_cast<session_manager*>(user_data);
+    manager->connection_ = connection;
 }
 
 void session_manager::on_name_lost(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    session_manager* manager = static_cast<session_manager*>(user_data);
-    manager->connection_     = connection;
+    auto* manager        = static_cast<session_manager*>(user_data);
+    manager->connection_ = connection;
     throw std::runtime_error("Lost D-Bus name (is another application that owns it already running?)");
 }
 
@@ -87,8 +88,8 @@ void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* 
 {
     using namespace std::string_literals;
 
-    session_manager* manager = static_cast<session_manager*>(user_data);
-    auto             it      = manager->signal_handlers_.find(signal_name);
+    auto* manager = static_cast<session_manager*>(user_data);
+    auto  it      = manager->signal_handlers_.find(signal_name);
 
     if (it == manager->signal_handlers_.end())
         throw std::runtime_error("No signal handler registered for '"s + signal_name + "''!");
