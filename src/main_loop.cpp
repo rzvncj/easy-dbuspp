@@ -7,10 +7,8 @@
 
 namespace easydbuspp {
 
-main_loop::main_loop()
+main_loop::main_loop() : loop_ {g_main_loop_new(nullptr, FALSE)}
 {
-    loop_ = g_main_loop_new(nullptr, FALSE);
-
     g_unix_signal_add(SIGINT, stop_sighandler, loop_);
     g_unix_signal_add(SIGTERM, stop_sighandler, loop_);
 }
@@ -57,7 +55,7 @@ void main_loop::stop()
 
 int main_loop::stop_sighandler(void* param)
 {
-    GMainLoop* loop = static_cast<GMainLoop*>(param);
+    auto* loop = static_cast<GMainLoop*>(param);
 
     if (g_main_loop_is_running(loop))
         g_main_loop_quit(loop);

@@ -54,7 +54,7 @@ void object::connect()
                                                 g_dbus_node_info_unref};
 
     if (!introspection_data_) {
-        std::string error_message = error->message;
+        const std::string error_message = error->message;
         g_error_free(error);
 
         throw std::runtime_error("Could not initialize introspection XML: " + error_message);
@@ -188,7 +188,7 @@ void object::g_thread_pool_function(gpointer data, gpointer /* user_data */)
 {
     using threadpool_fn_t = std::function<void()>;
 
-    std::unique_ptr<threadpool_fn_t> method_ptr {static_cast<threadpool_fn_t*>(data)};
+    const std::unique_ptr<threadpool_fn_t> method_ptr {static_cast<threadpool_fn_t*>(data)};
     (*method_ptr)();
 }
 

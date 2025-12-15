@@ -14,7 +14,7 @@ session_manager::session_manager(bus_type_t bus_type)
     connection_ = g_bus_get_sync(to_g_bus_type(bus_type), nullptr, &error);
 
     if (!connection_) {
-        std::string error_message = error->message;
+        const std::string error_message = error->message;
         g_error_free(error);
 
         throw std::runtime_error("Can't connect to the bus: " + error_message);

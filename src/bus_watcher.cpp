@@ -20,7 +20,7 @@ bus_watcher::~bus_watcher()
 
 void bus_watcher::bus_name_disappeared_handler(const std::function<void()>& disappeared_handler)
 {
-    std::lock_guard lock {name_appeared_cv_mutex_};
+    const std::lock_guard lock {name_appeared_cv_mutex_};
     disappeared_handler_ = disappeared_handler;
 }
 
@@ -29,7 +29,7 @@ void bus_watcher::on_name_appeared(GDBusConnection* /* connection */, const gcha
 {
     bus_watcher* watcher = static_cast<bus_watcher*>(user_data);
 
-    std::lock_guard lock {watcher->name_appeared_cv_mutex_};
+    const std::lock_guard lock {watcher->name_appeared_cv_mutex_};
     watcher->name_appeared_ = true;
     watcher->name_appeared_cv_.notify_all();
 }
@@ -38,7 +38,7 @@ void bus_watcher::on_name_disappeared(GDBusConnection* /* connection */, const g
 {
     bus_watcher* watcher = static_cast<bus_watcher*>(user_data);
 
-    std::lock_guard lock {watcher->name_appeared_cv_mutex_};
+    const std::lock_guard lock {watcher->name_appeared_cv_mutex_};
 
     if (watcher->name_appeared_ && watcher->disappeared_handler_)
         watcher->disappeared_handler_();

@@ -210,7 +210,7 @@ GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
             arg = unix_fd_t {fd_list_index++};
 
             if (error) {
-                std::string error_message = error->message;
+                const std::string error_message = error->message;
                 g_error_free(error);
 
                 throw std::runtime_error("Could not add UNIX fd: " + error_message);
@@ -239,7 +239,7 @@ void set_up_from_g_unix_fd_list(GUnixFDList* fd_list, std::tuple<A...>& inout)
             arg = unix_fd_t {g_unix_fd_list_get(fd_list, static_cast<gint32>(arg), &error)};
 
             if (error) {
-                std::string error_message = error->message;
+                const std::string error_message = error->message;
                 g_error_free(error);
 
                 throw std::runtime_error("Could not extract UNIX fd: " + error_message);

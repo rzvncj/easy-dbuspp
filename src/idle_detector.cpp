@@ -25,7 +25,7 @@ void idle_detector::disable()
         return;
 
     {
-        std::lock_guard lock {idle_mutex_};
+        const std::lock_guard lock {idle_mutex_};
         stop_ = true;
     }
 
@@ -41,7 +41,7 @@ void idle_detector::ping(const object_path_t& object_path)
         return;
 
     {
-        std::lock_guard lock {idle_mutex_};
+        const std::lock_guard lock {idle_mutex_};
 
         if (excluded_objects_.find(object_path) != excluded_objects_.end())
             return;
@@ -54,7 +54,7 @@ void idle_detector::ping(const object_path_t& object_path)
 
 void idle_detector::exclude(const object& obj)
 {
-    std::lock_guard lock {idle_mutex_};
+    const std::lock_guard lock {idle_mutex_};
 
     excluded_objects_.insert(obj.object_path());
 }

@@ -24,7 +24,7 @@ R proxy::call(const std::string& method_name, A... parameters) const
     g_unix_fd_list_ptr out_fd_list_raii_holder {out_fd_list, g_object_unref};
 
     if (!result) {
-        std::string error_message = error->message;
+        const std::string error_message = error->message;
         g_error_free(error);
 
         throw std::runtime_error("Proxy method call error: " + error_message);

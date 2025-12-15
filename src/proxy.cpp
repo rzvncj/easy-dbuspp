@@ -22,7 +22,7 @@ proxy::proxy(session_manager& session_mgr, const std::string& bus_name, const st
                                    object_path.generic_string().c_str(), interface_name.c_str(), nullptr, &error);
 
     if (!proxy_) {
-        std::string error_message = error->message;
+        const std::string error_message = error->message;
         g_error_free(error);
 
         throw std::runtime_error("Could not create proxy: " + error_message);
