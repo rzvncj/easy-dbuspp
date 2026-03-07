@@ -92,7 +92,7 @@ inline GBusType to_g_bus_type(easydbuspp::bus_type_t bus_type)
         return G_BUS_TYPE_SYSTEM;
     }
 
-    throw std::runtime_error("Unkown bus type - this should never happen.");
+    throw std::runtime_error("Unknown bus type - this should never happen.");
 }
 
 } // end of namespace easydbuspp
