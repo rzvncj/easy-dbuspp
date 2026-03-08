@@ -12,21 +12,18 @@ proxy::proxy(session_manager& session_mgr, const std::string& bus_name, const st
              const object_path_t& object_path)
     : session_manager_ {session_mgr}, bus_name_ {bus_name}, interface_name_ {interface_name}, object_path_ {object_path}
 {
-    GError* error {nullptr};
-
     if (!session_manager_.connection_)
         throw std::runtime_error("Could not create proxy: no live D-Bus connection!");
 
+    GError* raw_error {nullptr};
+
     proxy_ = g_dbus_proxy_new_sync(session_manager_.connection_, G_DBUS_PROXY_FLAGS_NONE,
                                    nullptr /* GDBusInterfaceInfo */, bus_name.c_str(),
-                                   object_path.generic_string().c_str(), interface_name.c_str(), nullptr, &error);
+                                   object_path.generic_string().c_str(), interface_name.c_str(), nullptr, &raw_error);
+    g_error_ptr error {raw_error, g_error_free};
 
-    if (!proxy_) {
-        const std::string error_message = error->message;
-        g_error_free(error);
-
-        throw std::runtime_error("Could not create proxy: " + error_message);
-    }
+    if (!proxy_)
+        throw std::runtime_error("Could not create proxy: " + std::string {error->message});
 }
 
 proxy::~proxy()

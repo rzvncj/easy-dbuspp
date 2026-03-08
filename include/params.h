@@ -201,17 +201,14 @@ GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
             if (!fd_list)
                 fd_list.reset(g_unix_fd_list_new());
 
-            GError* error {nullptr};
+            GError* raw_error {nullptr};
 
-            g_unix_fd_list_append(fd_list.get(), static_cast<gint32>(arg), &error);
+            g_unix_fd_list_append(fd_list.get(), static_cast<gint32>(arg), &raw_error);
             arg = unix_fd_t {fd_list_index++};
+            g_error_ptr error {raw_error, g_error_free};
 
-            if (error) {
-                const std::string error_message = error->message;
-                g_error_free(error);
-
-                throw std::runtime_error("Could not add UNIX fd: " + error_message);
-            }
+            if (error)
+                throw std::runtime_error("Could not add UNIX fd: " + std::string {error->message});
         }
     };
 
@@ -232,15 +229,12 @@ void set_up_from_g_unix_fd_list(GUnixFDList* fd_list, std::tuple<A...>& inout)
             if (!fd_list)
                 throw std::runtime_error("UNIX fd parameter encountered but no fd list received!");
 
-            GError* error {nullptr};
-            arg = unix_fd_t {g_unix_fd_list_get(fd_list, static_cast<gint32>(arg), &error)};
+            GError* raw_error {nullptr};
+            arg = unix_fd_t {g_unix_fd_list_get(fd_list, static_cast<gint32>(arg), &raw_error)};
+            g_error_ptr error {raw_error, g_error_free};
 
-            if (error) {
-                const std::string error_message = error->message;
-                g_error_free(error);
-
-                throw std::runtime_error("Could not extract UNIX fd: " + error_message);
-            }
+            if (error)
+                throw std::runtime_error("Could not extract UNIX fd: " + std::string {error->message});
         }
     };
 

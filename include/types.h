@@ -37,6 +37,7 @@ using g_variant_builder_ptr = std::unique_ptr<GVariantBuilder, decltype(&g_varia
 using g_variant_iter_ptr    = std::unique_ptr<GVariantIter, decltype(&g_variant_iter_free)>;
 using g_dbus_node_info_ptr  = std::unique_ptr<GDBusNodeInfo, decltype(&g_dbus_node_info_unref)>;
 using g_unix_fd_list_ptr    = std::unique_ptr<GUnixFDList, decltype(&g_object_unref)>;
+using g_error_ptr           = std::unique_ptr<GError, decltype(&g_error_free)>;
 
 template <typename U, typename V>
 constexpr bool decay_same_v = std::is_same_v<std::decay_t<U>, V>;

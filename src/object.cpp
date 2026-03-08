@@ -48,17 +48,14 @@ void object::connect()
     if (!session_manager_.connection_)
         throw std::runtime_error("Invalid input when attempting object connect");
 
-    GError* error {nullptr};
+    GError* raw_error {nullptr};
 
-    introspection_data_ = g_dbus_node_info_ptr {g_dbus_node_info_new_for_xml(introspection_xml().c_str(), &error),
+    introspection_data_ = g_dbus_node_info_ptr {g_dbus_node_info_new_for_xml(introspection_xml().c_str(), &raw_error),
                                                 g_dbus_node_info_unref};
+    g_error_ptr error {raw_error, g_error_free};
 
-    if (!introspection_data_) {
-        const std::string error_message = error->message;
-        g_error_free(error);
-
-        throw std::runtime_error("Could not initialize introspection XML: " + error_message);
-    }
+    if (!introspection_data_)
+        throw std::runtime_error("Could not initialize introspection XML: " + std::string {error->message});
 
     registration_id_ = g_dbus_connection_register_object(
         session_manager_.connection_, object_path_.generic_string().c_str(), introspection_data_->interfaces[0],

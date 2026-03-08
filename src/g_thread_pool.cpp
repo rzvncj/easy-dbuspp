@@ -4,20 +4,18 @@
 
 #include <g_thread_pool.h>
 #include <stdexcept>
+#include <types.h>
 
 namespace easydbuspp {
 
 g_thread_pool::g_thread_pool(GFunc func)
 {
-    GError* error {nullptr};
-    pool_ = g_thread_pool_new(func, nullptr, g_get_num_processors(), TRUE, &error);
+    GError* raw_error {nullptr};
+    pool_ = g_thread_pool_new(func, nullptr, g_get_num_processors(), TRUE, &raw_error);
+    g_error_ptr error {raw_error, g_error_free};
 
-    if (!pool_) {
-        const std::string error_message = error->message;
-        g_error_free(error);
-
-        throw std::runtime_error("Could not create thread pool: " + error_message);
-    }
+    if (!pool_)
+        throw std::runtime_error("Could not create thread pool: " + std::string {error->message});
 }
 
 g_thread_pool::~g_thread_pool()
@@ -27,13 +25,11 @@ g_thread_pool::~g_thread_pool()
 
 void g_thread_pool::push(gpointer data)
 {
-    GError* error {nullptr};
+    GError* raw_error {nullptr};
 
-    if (!g_thread_pool_push(pool_, data, &error)) {
-        const std::string error_message = error->message;
-        g_error_free(error);
-
-        throw std::runtime_error("Could not push data to thread pool: " + error_message);
+    if (!g_thread_pool_push(pool_, data, &raw_error)) {
+        g_error_ptr error {raw_error, g_error_free};
+        throw std::runtime_error("Could not push data to thread pool: " + std::string {error->message});
     }
 }
 

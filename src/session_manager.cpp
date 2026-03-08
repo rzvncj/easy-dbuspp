@@ -9,16 +9,13 @@ namespace easydbuspp {
 
 session_manager::session_manager(bus_type_t bus_type)
 {
-    GError* error {nullptr};
+    GError* raw_error {nullptr};
 
-    connection_ = g_bus_get_sync(to_g_bus_type(bus_type), nullptr, &error);
+    connection_ = g_bus_get_sync(to_g_bus_type(bus_type), nullptr, &raw_error);
+    g_error_ptr error {raw_error, g_error_free};
 
-    if (!connection_) {
-        const std::string error_message = error->message;
-        g_error_free(error);
-
-        throw std::runtime_error("Can't connect to the bus: " + error_message);
-    }
+    if (!connection_)
+        throw std::runtime_error("Can't connect to the bus: " + std::string {error->message});
 }
 
 session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name)

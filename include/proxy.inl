@@ -11,24 +11,21 @@ template <typename R, typename... A>
 R proxy::call(const std::string& method_name, A... parameters) const
 {
     std::tuple<std::decay_t<A>...> fn_args {parameters...};
-    GError*                        error {nullptr};
+    GError*                        raw_error {nullptr};
     GUnixFDList*                   out_fd_list {nullptr};
 
     g_unix_fd_list_ptr fd_list {extract_g_unix_fd_list(fn_args), g_object_unref};
 
     g_variant_ptr result {g_dbus_proxy_call_with_unix_fd_list_sync(proxy_, method_name.c_str(), to_gvariant(fn_args),
                                                                    G_DBUS_CALL_FLAGS_NONE, -1, fd_list.get(),
-                                                                   &out_fd_list, nullptr, &error),
+                                                                   &out_fd_list, nullptr, &raw_error),
                           g_variant_unref};
 
+    g_error_ptr        error {raw_error, g_error_free};
     g_unix_fd_list_ptr out_fd_list_raii_holder {out_fd_list, g_object_unref};
 
-    if (!result) {
-        const std::string error_message = error->message;
-        g_error_free(error);
-
-        throw std::runtime_error("Proxy method call error: " + error_message);
-    }
+    if (!result)
+        throw std::runtime_error("Proxy method call error: " + std::string {error->message});
 
     if constexpr (!std::is_void_v<R>) {
         if constexpr (is_tuple_like_v<R>) {
