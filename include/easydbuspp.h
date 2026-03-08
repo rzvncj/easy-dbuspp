@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __EASYSBUSPP_H_INCLUDED__
-#define __EASYSBUSPP_H_INCLUDED__
+#ifndef __EASYDBUSPP_H_INCLUDED__
+#define __EASYDBUSPP_H_INCLUDED__
 
 // Convenience header.
 
@@ -15,4 +15,4 @@
 #include "proxy.h"
 #include "session_manager.h"
 
-#endif // __EASYSBUSPP_H_INCLUDED__
+#endif // __EASYDBUSPP_H_INCLUDED__
