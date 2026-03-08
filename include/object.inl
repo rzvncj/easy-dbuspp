@@ -95,15 +95,15 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
             if constexpr (is_tuple_like_v<R>) {
                 auto ret         = std::apply(callable, fn_args);
                 auto out_fd_list = extract_g_unix_fd_list(ret);
-                return std::pair {to_gvariant(ret), out_fd_list.release()};
+                return std::pair {to_gvariant(ret), std::move(out_fd_list)};
             } else {
                 auto wrapper     = std::tuple {std::apply(callable, fn_args)};
                 auto out_fd_list = extract_g_unix_fd_list(wrapper);
-                return std::pair {to_gvariant(wrapper), out_fd_list.release()};
+                return std::pair {to_gvariant(wrapper), std::move(out_fd_list)};
             }
         } else {
             std::apply(callable, fn_args);
-            return std::pair {nullptr, nullptr};
+            return std::pair<GVariant*, g_unix_fd_list_ptr> {nullptr, g_unix_fd_list_ptr {nullptr, g_object_unref}};
         }
     };
 }
