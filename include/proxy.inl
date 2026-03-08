@@ -14,7 +14,7 @@ R proxy::call(const std::string& method_name, A... parameters) const
     GError*                        raw_error {nullptr};
     GUnixFDList*                   out_fd_list {nullptr};
 
-    g_unix_fd_list_ptr fd_list {extract_g_unix_fd_list(fn_args), g_object_unref};
+    g_unix_fd_list_ptr fd_list {extract_g_unix_fd_list(fn_args)};
 
     g_variant_ptr result {g_dbus_proxy_call_with_unix_fd_list_sync(proxy_, method_name.c_str(), to_gvariant(fn_args),
                                                                    G_DBUS_CALL_FLAGS_NONE, -1, fd_list.get(),

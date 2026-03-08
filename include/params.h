@@ -191,7 +191,7 @@ GVariant* to_gvariant(T t)
 }
 
 template <typename... A>
-GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
+g_unix_fd_list_ptr extract_g_unix_fd_list(std::tuple<A...>& input)
 {
     g_unix_fd_list_ptr fd_list {nullptr, g_object_unref};
     gint32             fd_list_index {0};
@@ -218,7 +218,7 @@ GUnixFDList* extract_g_unix_fd_list(std::tuple<A...>& input)
         },
         input);
 
-    return fd_list.release();
+    return fd_list;
 }
 
 template <typename... A>
