@@ -92,7 +92,13 @@ void session_manager::on_name_lost(GDBusConnection* connection, const gchar* /* 
     const std::lock_guard lock {manager->name_lost_handler_mutex_};
 
     if (manager->name_lost_handler_) {
-        manager->name_lost_handler_(manager->bus_name_);
+        try {
+            manager->name_lost_handler_(manager->bus_name_);
+        } catch (const std::exception& e) {
+            g_warning("Exception in name_lost_handler: %s", e.what());
+        } catch (...) {
+            g_warning("Unknown exception in name_lost_handler");
+        }
     } else {
         g_critical("Lost D-Bus name '%s' (is another application that owns it already running?)",
                    manager->bus_name_.c_str());
