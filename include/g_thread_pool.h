@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __G_THREAD_POOL_H_INCLUDED__
-#define __G_THREAD_POOL_H_INCLUDED__
+#ifndef EASYDBUSPP_G_THREAD_POOL_H_INCLUDED
+#define EASYDBUSPP_G_THREAD_POOL_H_INCLUDED
 
 #include <glib.h>
 
@@ -26,4 +26,4 @@ private:
 
 } // end of namespace easydbuspp
 
-#endif // __G_THREAD_POOL_H_INCLUDED__
+#endif // EASYDBUSPP_G_THREAD_POOL_H_INCLUDED

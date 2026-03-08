@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __SESSION_MANAGER_H_INCLUDED__
-#define __SESSION_MANAGER_H_INCLUDED__
+#ifndef EASYDBUSPP_SESSION_MANAGER_H_INCLUDED
+#define EASYDBUSPP_SESSION_MANAGER_H_INCLUDED
 
 #include "types.h"
 #include <functional>
@@ -115,4 +115,4 @@ private:
 
 #include "session_manager.inl"
 
-#endif // __SESSION_MANAGER_H_INCLUDED__
+#endif // EASYDBUSPP_SESSION_MANAGER_H_INCLUDED

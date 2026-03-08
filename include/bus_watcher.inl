@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __BUS_WATCHER_INL_INCLUDED__
-#define __BUS_WATCHER_INL_INCLUDED__
+#ifndef EASYDBUSPP_BUS_WATCHER_INL_INCLUDED
+#define EASYDBUSPP_BUS_WATCHER_INL_INCLUDED
 
 #include <stdexcept>
 
@@ -22,4 +22,4 @@ void bus_watcher::wait_for(const std::chrono::duration<Rep, Period>& timeout)
 
 } // end of namespace easydbuspp
 
-#endif // __BUS_WATCHER_INL_INCLUDED__
+#endif // EASYDBUSPP_BUS_WATCHER_INL_INCLUDED

@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __ORG_FREEDESKTOP_DBUS_H_INCLUDED__
-#define __ORG_FREEDESKTOP_DBUS_H_INCLUDED__
+#ifndef EASYDBUSPP_ORG_FREEDESKTOP_DBUS_PROXY_H_INCLUDED
+#define EASYDBUSPP_ORG_FREEDESKTOP_DBUS_PROXY_H_INCLUDED
 
 #include "proxy.h"
 #include <cstdlib>
@@ -35,4 +35,4 @@ public:
 
 } // end of namespace easydbuspp
 
-#endif // __ORG_FREEDESKTOP_DBUS_H_INCLUDED__
+#endif // EASYDBUSPP_ORG_FREEDESKTOP_DBUS_PROXY_H_INCLUDED

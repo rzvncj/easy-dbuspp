@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __MAIN_LOOP_H_INCLUDED__
-#define __MAIN_LOOP_H_INCLUDED__
+#ifndef EASYDBUSPP_MAIN_LOOP_H_INCLUDED
+#define EASYDBUSPP_MAIN_LOOP_H_INCLUDED
 
 #include <future>
 #include <gio/gio.h>
@@ -50,4 +50,4 @@ private:
 
 } // end of namespace easydbuspp
 
-#endif // __MAIN_LOOP_H_INCLUDED__
+#endif // EASYDBUSPP_MAIN_LOOP_H_INCLUDED

@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __IDLE_DETECTOR_INL_INCLUDED__
-#define __IDLE_DETECTOR_INL_INCLUDED__
+#ifndef EASYDBUSPP_IDLE_DETECTOR_INL_INCLUDED
+#define EASYDBUSPP_IDLE_DETECTOR_INL_INCLUDED
 
 #include "main_loop.h"
 #include <stdexcept>
@@ -42,4 +42,4 @@ void idle_detector::enable(const std::chrono::duration<Rep, Period>& timeout)
 
 } // end of namespace easydbuspp
 
-#endif // __IDLE_DETECTOR_INL_INCLUDED__
+#endif // EASYDBUSPP_IDLE_DETECTOR_INL_INCLUDED

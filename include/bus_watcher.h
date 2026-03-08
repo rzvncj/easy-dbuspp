@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __BUS_WATCHER_H_INCLUDED__
-#define __BUS_WATCHER_H_INCLUDED__
+#ifndef EASYDBUSPP_BUS_WATCHER_H_INCLUDED
+#define EASYDBUSPP_BUS_WATCHER_H_INCLUDED
 
 #include "types.h"
 #include <chrono>
@@ -62,4 +62,4 @@ private:
 
 #include "bus_watcher.inl"
 
-#endif // __BUS_WATCHER_H_INCLUDED__
+#endif // EASYDBUSPP_BUS_WATCHER_H_INCLUDED

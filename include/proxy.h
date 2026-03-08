@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __PROXY_H_INCLUDED__
-#define __PROXY_H_INCLUDED__
+#ifndef EASYDBUSPP_PROXY_H_INCLUDED
+#define EASYDBUSPP_PROXY_H_INCLUDED
 
 #include "params.h"
 #include "type_mapping.h"
@@ -118,4 +118,4 @@ private:
 
 #include "proxy.inl"
 
-#endif // __PROXY_H_INCLUDED__
+#endif // EASYDBUSPP_PROXY_H_INCLUDED

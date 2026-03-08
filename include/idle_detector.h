@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __IDLE_DETECTOR_H_INCLUDED__
-#define __IDLE_DETECTOR_H_INCLUDED__
+#ifndef EASYDBUSPP_IDLE_DETECTOR_H_INCLUDED
+#define EASYDBUSPP_IDLE_DETECTOR_H_INCLUDED
 
 #include "types.h"
 #include <chrono>
@@ -70,4 +70,4 @@ private:
 
 #include "idle_detector.inl"
 
-#endif // __IDLE_DETECTOR_H_INCLUDED__
+#endif // EASYDBUSPP_IDLE_DETECTOR_H_INCLUDED

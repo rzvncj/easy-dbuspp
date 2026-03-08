@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __OBJECT_H_INCLUDED__
-#define __OBJECT_H_INCLUDED__
+#ifndef EASYDBUSPP_OBJECT_H_INCLUDED
+#define EASYDBUSPP_OBJECT_H_INCLUDED
 
 #include "g_thread_pool.h"
 #include "params.h"
@@ -222,4 +222,4 @@ private:
 
 #include "object.inl"
 
-#endif // __OBJECT_H_INCLUDED__
+#endif // EASYDBUSPP_OBJECT_H_INCLUDED

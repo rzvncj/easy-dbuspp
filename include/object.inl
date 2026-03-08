@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __OBJECT_INL_INCLUDED__
-#define __OBJECT_INL_INCLUDED__
+#ifndef EASYDBUSPP_OBJECT_INL_INCLUDED
+#define EASYDBUSPP_OBJECT_INL_INCLUDED
 
 #include "session_manager.h"
 
@@ -233,4 +233,4 @@ void object::add_property(const std::string& name, const std::function<T()>& get
 
 } // end of namespace easydbuspp
 
-#endif // __OBJECT_INL_INCLUDED__
+#endif // EASYDBUSPP_OBJECT_INL_INCLUDED

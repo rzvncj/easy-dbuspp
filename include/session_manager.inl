@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __SESSION_MANAGER_INL_INCLUDED__
-#define __SESSION_MANAGER_INL_INCLUDED__
+#ifndef EASYDBUSPP_SESSION_MANAGER_INL_INCLUDED
+#define EASYDBUSPP_SESSION_MANAGER_INL_INCLUDED
 
 #include "params.h"
 
@@ -47,4 +47,4 @@ void session_manager::signal_subscribe(const std::string& signal_name, C&& calla
 
 } // end of namespace easydbuspp
 
-#endif // __SESSION_MANAGER_INL_INCLUDED__
+#endif // EASYDBUSPP_SESSION_MANAGER_INL_INCLUDED

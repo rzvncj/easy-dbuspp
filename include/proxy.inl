@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#ifndef __PROXY_INL_INCLUDED__
-#define __PROXY_INL_INCLUDED__
+#ifndef EASYDBUSPP_PROXY_INL_INCLUDED
+#define EASYDBUSPP_PROXY_INL_INCLUDED
 
 namespace easydbuspp {
 
@@ -78,4 +78,4 @@ T proxy::property(const std::string& property_name) const
 
 } // end of namespace easydbuspp
 
-#endif // __PROXY_INL_INCLUDED__
+#endif // EASYDBUSPP_PROXY_INL_INCLUDED
