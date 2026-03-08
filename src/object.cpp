@@ -81,7 +81,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 
     const dbus_context context {sender, interface_name, object_path, method_name};
 
-    thread_pool_.push(new std::function<void()> {[=] {
+    auto task = std::make_unique<std::function<void()>>([=] {
         try {
             auto* obj_ptr = static_cast<object*>(user_data);
 
@@ -114,7 +114,10 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
             const std::string error_name {std::string {interface_name} + ".MethodError"};
             g_dbus_method_invocation_return_dbus_error(invocation, error_name.c_str(), e.what());
         }
-    }});
+    });
+
+    thread_pool_.push(task.get());
+    task.release();
 }
 
 GVariant* object::handle_get_property(GDBusConnection* /* connection */, const gchar* sender, const gchar* object_path,
