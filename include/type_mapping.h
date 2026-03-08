@@ -8,7 +8,6 @@
 #include "types.h"
 #include <cstddef>
 #include <cstdint>
-#include <stdexcept>
 #include <string>
 
 namespace easydbuspp {
@@ -16,8 +15,6 @@ namespace easydbuspp {
 template <typename T>
 std::string to_dbus_type_string()
 {
-    using namespace std::string_literals;
-
     if constexpr (decay_same_v<T, int16_t>)
         return "n";
     else if constexpr (decay_same_v<T, uint16_t>)
@@ -63,7 +60,7 @@ std::string to_dbus_type_string()
     else if constexpr (std::is_void_v<T>)
         return "()";
     else
-        throw std::runtime_error {"Can't map "s + typeid(T).name() + " to a D-Bus type!"};
+        static_assert(always_false_v<T>, "Can't map T to a D-Bus type!");
 }
 
 template <typename T>
@@ -75,8 +72,6 @@ std::string to_dbus_type_string(T)
 template <typename T>
 const GVariantType* to_dbus_type()
 {
-    using namespace std::string_literals;
-
     if constexpr (decay_same_v<T, int16_t>)
         return G_VARIANT_TYPE_INT16;
     else if constexpr (decay_same_v<T, uint16_t>)
@@ -110,7 +105,7 @@ const GVariantType* to_dbus_type()
     else if constexpr (std::is_void_v<T>)
         return G_VARIANT_TYPE_UNIT;
     else
-        throw std::runtime_error {"Can't map "s + typeid(T).name() + " to a D-Bus type!"};
+        static_assert(always_false_v<T>, "Can't map T to a D-Bus type!");
 }
 
 template <typename T>

@@ -19,8 +19,6 @@ void extract(GVariant* v, std::variant<Types...>& out);
 template <typename T>
 std::decay_t<T> from_gvariant(GVariant* v)
 {
-    using namespace std::string_literals;
-
     if constexpr (decay_same_v<T, int16_t>)
         return g_variant_get_int16(v);
     else if constexpr (decay_same_v<T, uint16_t>)
@@ -102,7 +100,7 @@ std::decay_t<T> from_gvariant(GVariant* v)
         extract(child_value.get(), ret);
         return ret;
     } else
-        throw std::runtime_error {"Don't know how to extract "s + typeid(T).name() + " from a GVariant!"};
+        static_assert(always_false_v<T>, "Don't know how to extract T from a GVariant!");
 }
 
 template <typename... Types>
@@ -130,8 +128,6 @@ std::decay_t<T> extract(GVariant* parameters, gsize index)
 template <typename T>
 GVariant* to_gvariant(T t)
 {
-    using namespace std::string_literals;
-
     if constexpr (std::is_arithmetic_v<T> || decay_same_v<T, const char*>)
         return g_variant_new(to_dbus_type_string(t).c_str(), t);
     else if constexpr (decay_same_v<T, std::byte>)
@@ -184,7 +180,7 @@ GVariant* to_gvariant(T t)
 
         return g_variant_builder_end(builder.get());
     } else
-        throw std::runtime_error {"Don't know how to create a GVariant from "s + typeid(T).name() + "!"};
+        static_assert(always_false_v<T>, "Don't know how to create a GVariant from T!");
 }
 
 template <typename... A>

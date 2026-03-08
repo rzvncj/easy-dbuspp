@@ -41,6 +41,12 @@ using g_unix_fd_list_ptr    = std::unique_ptr<GUnixFDList, decltype(&g_object_un
 template <typename U, typename V>
 constexpr bool decay_same_v = std::is_same_v<std::decay_t<U>, V>;
 
+// Always-false helper for static_assert in if constexpr else branches.
+// A plain static_assert(false) would be ill-formed at template definition
+// time; making it dependent on T defers evaluation to instantiation.
+template <typename>
+inline constexpr bool always_false_v = false;
+
 template <typename T>
 struct is_output_type {
     static constexpr bool value
