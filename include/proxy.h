@@ -58,7 +58,7 @@ public:
      * @throw             std::runtime_error
      */
     template <typename R, typename... A>
-    [[nodiscard]] R call(const std::string& method_name, A... parameters) const;
+    [[nodiscard]] R call(const std::string& method_name, const A&... parameters) const;
 
     /*!
      * Returns a cached property. When we initialize the proxy, it will cache all the properties

@@ -8,11 +8,11 @@
 namespace easydbuspp {
 
 template <typename R, typename... A>
-R proxy::call(const std::string& method_name, A... parameters) const
+R proxy::call(const std::string& method_name, const A&... parameters) const
 {
-    std::tuple<std::decay_t<A>...> fn_args {parameters...};
-    GError*                        raw_error {nullptr};
-    GUnixFDList*                   out_fd_list {nullptr};
+    auto         fn_args = std::make_tuple(parameters...);
+    GError*      raw_error {nullptr};
+    GUnixFDList* out_fd_list {nullptr};
 
     g_unix_fd_list_ptr fd_list {extract_g_unix_fd_list(fn_args)};
 
