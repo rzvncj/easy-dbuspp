@@ -51,7 +51,7 @@ public:
     object(session_manager& session_mgr, const std::string& interface_name, const object_path_t& object_path);
 
     //! Destructor. If applicable, will disconnect the object from its D-Bus connection.
-    ~object();
+    ~object() noexcept;
 
     object(const object&)            = delete;
     object& operator=(const object&) = delete;

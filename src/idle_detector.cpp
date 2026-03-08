@@ -7,7 +7,7 @@
 
 namespace easydbuspp {
 
-idle_detector::~idle_detector()
+idle_detector::~idle_detector() noexcept
 {
     // TODO: I'm betting that the future::get() call in disable() won't throw.
     disable();

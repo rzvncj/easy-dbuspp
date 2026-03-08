@@ -13,7 +13,7 @@ class g_thread_pool {
 
 public:
     explicit g_thread_pool(GFunc func);
-    ~g_thread_pool();
+    ~g_thread_pool() noexcept;
 
     g_thread_pool(const g_thread_pool&)            = delete;
     g_thread_pool& operator=(const g_thread_pool&) = delete;

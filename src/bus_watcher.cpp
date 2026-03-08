@@ -13,7 +13,7 @@ bus_watcher::bus_watcher(bus_type_t bus_type, const std::string& bus_name, bool 
 {
 }
 
-bus_watcher::~bus_watcher()
+bus_watcher::~bus_watcher() noexcept
 {
     g_bus_unwatch_name(watcher_id_);
 }

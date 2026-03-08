@@ -13,7 +13,7 @@ main_loop::main_loop() : loop_ {g_main_loop_new(nullptr, FALSE)}
     g_unix_signal_add(SIGTERM, stop_sighandler, loop_);
 }
 
-main_loop::~main_loop()
+main_loop::~main_loop() noexcept
 {
     stop();
     g_main_loop_unref(loop_);
@@ -25,7 +25,7 @@ main_loop& main_loop::instance()
     return the_instance;
 }
 
-void main_loop::run()
+void main_loop::run() noexcept
 {
     if (!g_main_loop_is_running(loop_))
         g_main_loop_run(loop_);
@@ -47,7 +47,7 @@ void main_loop::wait()
         run_future_.get();
 }
 
-void main_loop::stop()
+void main_loop::stop() noexcept
 {
     if (g_main_loop_is_running(loop_))
         g_main_loop_quit(loop_);

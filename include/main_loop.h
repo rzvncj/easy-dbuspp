@@ -23,10 +23,10 @@ private:
     main_loop& operator=(const main_loop&) = delete;
 
 public:
-    ~main_loop();
+    ~main_loop() noexcept;
 
     //! Start the D-Bus event processing loop.
-    void run();
+    void run() noexcept;
 
     //! Start the D-Bus event processing loop asynchronously.
     void run_async();
@@ -35,7 +35,7 @@ public:
     void wait();
 
     //! Stop the D-Bus event processing loop.
-    void stop();
+    void stop() noexcept;
 
     //! Return the unique, per-process instance.
     static main_loop& instance();

@@ -17,7 +17,7 @@ object::object(session_manager& session_mgr, const std::string& interface_name, 
     session_manager_.attach(this);
 }
 
-object::~object()
+object::~object() noexcept
 {
     session_manager_.detach(this);
 }

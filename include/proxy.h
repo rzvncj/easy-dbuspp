@@ -35,7 +35,7 @@ public:
           const object_path_t& object_path);
 
     //! Destructor. Cleans managed resources up.
-    virtual ~proxy();
+    virtual ~proxy() noexcept;
 
     proxy(const proxy&)            = delete;
     proxy& operator=(const proxy&) = delete;

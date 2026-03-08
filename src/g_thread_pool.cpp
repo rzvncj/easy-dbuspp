@@ -18,7 +18,7 @@ g_thread_pool::g_thread_pool(GFunc func)
         throw std::runtime_error("Could not create thread pool: " + std::string {error->message});
 }
 
-g_thread_pool::~g_thread_pool()
+g_thread_pool::~g_thread_pool() noexcept
 {
     g_thread_pool_free(pool_, TRUE, TRUE);
 }

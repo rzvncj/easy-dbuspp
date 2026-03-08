@@ -31,7 +31,7 @@ public:
     explicit bus_watcher(bus_type_t bus_type, const std::string& bus_name, bool start = false);
 
     //! Destructor.
-    ~bus_watcher();
+    ~bus_watcher() noexcept;
 
     bus_watcher(const bus_watcher&)            = delete;
     bus_watcher& operator=(const bus_watcher&) = delete;

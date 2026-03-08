@@ -47,7 +47,7 @@ public:
     session_manager(bus_type_t bus_type, const std::string& bus_name);
 
     //! Destructor. Detaches attached objects, releases the bus name.
-    ~session_manager();
+    ~session_manager() noexcept;
 
     session_manager(const session_manager&)            = delete;
     session_manager& operator=(const session_manager&) = delete;

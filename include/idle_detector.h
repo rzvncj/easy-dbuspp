@@ -28,7 +28,7 @@ private:
 
 public:
     //! Destructor. Will stop the idle detector thread, if running.
-    ~idle_detector();
+    ~idle_detector() noexcept;
 
     idle_detector(const idle_detector&)            = delete;
     idle_detector& operator=(const idle_detector&) = delete;

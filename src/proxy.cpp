@@ -26,7 +26,7 @@ proxy::proxy(session_manager& session_mgr, const std::string& bus_name, const st
         throw std::runtime_error("Could not create proxy: " + std::string {error->message});
 }
 
-proxy::~proxy()
+proxy::~proxy() noexcept
 {
     if (proxy_)
         g_object_unref(proxy_);

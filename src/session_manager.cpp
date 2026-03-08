@@ -28,7 +28,7 @@ session_manager::session_manager(bus_type_t bus_type, const std::string& bus_nam
 {
 }
 
-session_manager::~session_manager()
+session_manager::~session_manager() noexcept
 {
     if (connection_) {
         for (auto&& object_ptr : objects_)
