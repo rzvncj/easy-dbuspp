@@ -44,7 +44,6 @@ private:
     static int stop_sighandler(void* param);
 
 private:
-    bool              destructor_called_ {false};
     GMainLoop*        loop_ {nullptr};
     std::future<void> run_future_;
 };
