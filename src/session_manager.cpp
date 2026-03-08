@@ -60,8 +60,13 @@ void session_manager::detach(object* object_ptr)
 
 void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    auto* manager        = static_cast<session_manager*>(user_data);
-    manager->connection_ = connection;
+    auto* manager = static_cast<session_manager*>(user_data);
+
+    // The connection passed to g_bus_own_name callbacks is not owned by us.
+    // Take our own reference so we can safely g_object_unref() in the destructor.
+    if (connection && !manager->connection_) {
+        manager->connection_ = static_cast<GDBusConnection*>(g_object_ref(connection));
+    }
 
     for (auto&& obj_ptr : manager->objects_)
         obj_ptr->connect();
@@ -69,24 +74,30 @@ void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* 
 
 void session_manager::on_name_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    auto* manager        = static_cast<session_manager*>(user_data);
-    manager->connection_ = connection;
+    auto* manager = static_cast<session_manager*>(user_data);
+
+    // Guard: only take a ref if on_bus_acquired hasn't already set it.
+    if (connection && !manager->connection_)
+        manager->connection_ = static_cast<GDBusConnection*>(g_object_ref(connection));
 }
 
 void session_manager::on_name_lost(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    auto* manager        = static_cast<session_manager*>(user_data);
-    manager->connection_ = connection;
+    auto* manager = static_cast<session_manager*>(user_data);
+
+    // Guard: only take a ref if we don't already have one.
+    if (connection && !manager->connection_)
+        manager->connection_ = static_cast<GDBusConnection*>(g_object_ref(connection));
 
     const std::lock_guard lock {manager->name_lost_handler_mutex_};
 
-    if (manager->name_lost_handler_)
+    if (manager->name_lost_handler_) {
         manager->name_lost_handler_(manager->bus_name_);
-    else
+    } else {
         g_critical("Lost D-Bus name '%s' (is another application that owns it already running?)",
                    manager->bus_name_.c_str());
-
-    main_loop::instance().stop();
+        main_loop::instance().stop();
+    }
 }
 
 void session_manager::name_lost_handler(const name_lost_handler_t& handler)

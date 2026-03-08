@@ -65,12 +65,11 @@ void object::connect()
 
 void object::disconnect()
 {
-    if (!session_manager_.connection_)
+    if (!session_manager_.connection_ || registration_id_ == 0)
         return;
 
     g_dbus_connection_unregister_object(session_manager_.connection_, registration_id_);
-    registration_id_             = 0;
-    session_manager_.connection_ = nullptr;
+    registration_id_ = 0;
 }
 
 void object::handle_method_call(GDBusConnection* /* connection */, const gchar* sender, const gchar* object_path,
