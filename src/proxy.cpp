@@ -28,7 +28,8 @@ proxy::proxy(session_manager& session_mgr, const std::string& bus_name, const st
 
 proxy::~proxy()
 {
-    g_object_unref(proxy_);
+    if (proxy_)
+        g_object_unref(proxy_);
 }
 
 std::string proxy::unique_bus_name() const
