@@ -58,7 +58,7 @@ public:
      * @throw             std::runtime_error
      */
     template <typename R, typename... A>
-    R call(const std::string& method_name, A... parameters) const;
+    [[nodiscard]] R call(const std::string& method_name, A... parameters) const;
 
     /*!
      * Returns a cached property. When we initialize the proxy, it will cache all the properties
@@ -69,7 +69,7 @@ public:
      * @return The value of the requested property.
      */
     template <typename T>
-    T cached_property(const std::string& property_name) const;
+    [[nodiscard]] T cached_property(const std::string& property_name) const;
 
     /*!
      * Sets a cached property. This will only affect the cache of our proxy, not the remote
@@ -104,7 +104,7 @@ public:
      * @return The value of the requested property.
      */
     template <typename T>
-    T property(const std::string& property_name) const;
+    [[nodiscard]] T property(const std::string& property_name) const;
 
 private:
     session_manager& session_manager_;

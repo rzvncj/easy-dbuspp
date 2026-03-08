@@ -121,8 +121,8 @@ public:
      * @throw                std::runtime_error
      */
     template <typename... A>
-    std::function<void(A...)> add_broadcast_signal(const std::string&              name,
-                                                   const std::vector<std::string>& argument_names = {});
+    [[nodiscard]] std::function<void(A...)> add_broadcast_signal(const std::string&              name,
+                                                                 const std::vector<std::string>& argument_names = {});
 
     /*!
      * Add an unicast signal (generates XML introspection data as well). Unicast signals are finicky
@@ -146,7 +146,7 @@ public:
      * @throw                std::runtime_error
      */
     template <typename... A>
-    std::function<void(const std::string&, A...)>
+    [[nodiscard]] std::function<void(const std::string&, A...)>
     add_unicast_signal(const std::string& name, const std::vector<std::string>& argument_names = {});
 
     /*!
