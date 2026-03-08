@@ -74,9 +74,8 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
     return [callable](GVariant* parameters, GUnixFDList* fd_list, const dbus_context& context) {
         std::tuple<std::decay_t<A>...> fn_args;
         gsize                          arg_index {0};
-        gint                           fd_index {0};
 
-        auto init = [parameters, &arg_index, fd_list, &fd_index, &context](auto& arg) {
+        auto init = [parameters, &arg_index, fd_list, &context](auto& arg) {
             if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, dbus_context>)
                 arg = context;
             else
