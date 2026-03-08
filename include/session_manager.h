@@ -102,6 +102,7 @@ private:
     std::string                                       bus_name_;
     std::unordered_set<object*>                       objects_;
     std::unordered_map<std::string, signal_handler_t> signal_handlers_;
+    mutable std::mutex                                signal_handlers_mutex_;
     GDBusConnection*                                  connection_ {nullptr};
     name_lost_handler_t                               name_lost_handler_;
     std::mutex                                        name_lost_handler_mutex_;

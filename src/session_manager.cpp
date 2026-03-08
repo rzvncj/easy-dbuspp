@@ -100,15 +100,23 @@ void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* 
                                 const gchar* signal_name, GVariant* parameters, gpointer user_data)
 {
     auto* manager = static_cast<session_manager*>(user_data);
-    auto  it      = manager->signal_handlers_.find(signal_name);
 
-    if (it == manager->signal_handlers_.end()) {
-        g_warning("No signal handler registered for '%s'", signal_name);
-        return;
+    signal_handler_t handler;
+
+    {
+        const std::lock_guard lock {manager->signal_handlers_mutex_};
+        auto                  it = manager->signal_handlers_.find(signal_name);
+
+        if (it == manager->signal_handlers_.end()) {
+            g_warning("No signal handler registered for '%s'", signal_name);
+            return;
+        }
+
+        handler = it->second;
     }
 
     try {
-        it->second(parameters);
+        handler(parameters);
     } catch (const std::exception& e) {
         g_warning("Exception in signal handler for '%s': %s", signal_name, e.what());
     }
