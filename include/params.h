@@ -106,12 +106,19 @@ std::decay_t<T> from_gvariant(GVariant* v)
 template <typename... Types>
 void extract(GVariant* v, std::variant<Types...>& out)
 {
+    bool matched {false};
+
     (
         [&] {
-            if (g_variant_is_of_type(v, to_dbus_type<Types>()))
-                out = from_gvariant<Types>(v);
+            if (!matched && g_variant_is_of_type(v, to_dbus_type<Types>())) {
+                out     = from_gvariant<Types>(v);
+                matched = true;
+            }
         }(),
         ...);
+
+    if (!matched)
+        throw std::runtime_error {"GVariant type does not match any alternative in std::variant!"};
 }
 
 template <typename T>
