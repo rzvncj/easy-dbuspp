@@ -7,7 +7,7 @@
 namespace easydbuspp {
 
 org_freedesktop_dbus_proxy::org_freedesktop_dbus_proxy(session_manager& session_mgr)
-    : proxy(session_mgr, "org.freedesktop.DBus", "org.freedesktop.DBus", "/net/freedesktop/DBus")
+    : proxy(session_mgr, "org.freedesktop.DBus", "org.freedesktop.DBus", "/org/freedesktop/DBus")
 {
 }
 
