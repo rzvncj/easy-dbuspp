@@ -11,6 +11,7 @@
 #include "types.h"
 #include <cstdlib>
 #include <functional>
+#include <mutex>
 #include <utility>
 
 namespace easydbuspp {
@@ -210,7 +211,8 @@ private:
     g_dbus_node_info_ptr                                                                          introspection_data_;
     static g_thread_pool                                                                          thread_pool_;
     pre_request_handler_t                                                                         pre_request_handler_;
-    static inline const GDBusInterfaceVTable                                                      interface_vtable_ {
+    std::mutex                               pre_request_handler_mutex_;
+    static inline const GDBusInterfaceVTable interface_vtable_ {
         handle_method_call, handle_get_property, handle_set_property, {}};
 
     friend class session_manager;

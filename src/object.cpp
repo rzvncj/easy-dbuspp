@@ -40,6 +40,7 @@ object_path_t object::object_path() const
 
 void object::pre_request_handler(const pre_request_handler_t& handler)
 {
+    const std::lock_guard lock {pre_request_handler_mutex_};
     pre_request_handler_ = handler;
 }
 
@@ -92,8 +93,15 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
                 throw std::runtime_error("No method '"s + method_name + "' registered by object '"
                                          + obj_ptr->object_path_.generic_string() + "'!");
 
-            if (obj_ptr->pre_request_handler_)
-                obj_ptr->pre_request_handler_(request_type::METHOD, context);
+            {
+                pre_request_handler_t pre_handler;
+                {
+                    const std::lock_guard lock {obj_ptr->pre_request_handler_mutex_};
+                    pre_handler = obj_ptr->pre_request_handler_;
+                }
+                if (pre_handler)
+                    pre_handler(request_type::METHOD, context);
+            }
 
             GDBusMessage* message = g_dbus_method_invocation_get_message(invocation);
             GUnixFDList*  fd_list = g_dbus_message_get_unix_fd_list(message);
@@ -134,8 +142,15 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
 
         const dbus_context context {sender, interface_name, object_path, property_name};
 
-        if (obj_ptr->pre_request_handler_)
-            obj_ptr->pre_request_handler_(request_type::GET_PROPERTY, context);
+        {
+            pre_request_handler_t pre_handler;
+            {
+                const std::lock_guard lock {obj_ptr->pre_request_handler_mutex_};
+                pre_handler = obj_ptr->pre_request_handler_;
+            }
+            if (pre_handler)
+                pre_handler(request_type::GET_PROPERTY, context);
+        }
 
         return getter();
 
@@ -170,8 +185,15 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
 
         const dbus_context context {sender, interface_name, object_path, property_name};
 
-        if (obj_ptr->pre_request_handler_)
-            obj_ptr->pre_request_handler_(request_type::SET_PROPERTY, context);
+        {
+            pre_request_handler_t pre_handler;
+            {
+                const std::lock_guard lock {obj_ptr->pre_request_handler_mutex_};
+                pre_handler = obj_ptr->pre_request_handler_;
+            }
+            if (pre_handler)
+                pre_handler(request_type::SET_PROPERTY, context);
+        }
 
         return setter(value);
 
