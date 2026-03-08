@@ -7,7 +7,7 @@ project(
     'cpp',
     default_options: ['cpp_std=c++17', 'werror=true', 'cpp_args=-W -Wall'],
     license: 'AGPL-3.0',
-    version: '0',
+    version: '0.1.0',
     meson_version: '>= 0.58',
 )
 
@@ -69,6 +69,8 @@ easy_dbuspp = library(
         dep_gio,
         dep_threads,
     ],
+    version: meson.project_version(),
+    soversion: '0',
     install: true,
 )
 
