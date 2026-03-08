@@ -16,7 +16,10 @@ void idle_detector::enable(const std::chrono::duration<Rep, Period>& timeout)
     if (idle_future_.valid())
         throw std::runtime_error("Idle detector already running!");
 
-    stop_ = false;
+    {
+        const std::lock_guard lock {idle_mutex_};
+        stop_ = false;
+    }
 
     idle_future_ = std::async(std::launch::async, [this, timeout] {
         for (;;) {
