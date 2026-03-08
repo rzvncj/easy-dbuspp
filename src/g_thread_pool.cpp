@@ -8,8 +8,16 @@
 namespace easydbuspp {
 
 g_thread_pool::g_thread_pool(GFunc func)
-    : pool_ {g_thread_pool_new(func, nullptr, g_get_num_processors(), TRUE, nullptr)}
 {
+    GError* error {nullptr};
+    pool_ = g_thread_pool_new(func, nullptr, g_get_num_processors(), TRUE, &error);
+
+    if (!pool_) {
+        const std::string error_message = error->message;
+        g_error_free(error);
+
+        throw std::runtime_error("Could not create thread pool: " + error_message);
+    }
 }
 
 g_thread_pool::~g_thread_pool()
