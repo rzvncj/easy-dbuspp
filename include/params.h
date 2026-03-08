@@ -67,17 +67,14 @@ std::decay_t<T> from_gvariant(GVariant* v)
         const std::string type {"a" + to_dbus_type_string<typename std::decay_t<T>::value_type>()};
         std::decay_t<T>   ret;
 
-        GVariantIter* list {nullptr};
-        g_variant_get(v, type.c_str(), &list);
+        GVariantIter* raw_list {nullptr};
+        g_variant_get(v, type.c_str(), &raw_list);
+        g_variant_iter_ptr list {raw_list, g_variant_iter_free};
 
-        GVariant* rec {nullptr};
-
-        while ((rec = g_variant_iter_next_value(list))) {
-            ret.push_back(from_gvariant<typename std::decay_t<T>::value_type>(rec));
-            g_variant_unref(rec);
+        while (GVariant* raw_rec = g_variant_iter_next_value(list.get())) {
+            g_variant_ptr rec {raw_rec, g_variant_unref};
+            ret.push_back(from_gvariant<typename std::decay_t<T>::value_type>(rec.get()));
         }
-
-        g_variant_iter_free(list);
 
         return ret;
     } else if constexpr (is_map_like_v<T>) {
@@ -89,17 +86,14 @@ std::decay_t<T> from_gvariant(GVariant* v)
 
         std::decay_t<T> ret;
 
-        GVariantIter* list {nullptr};
-        g_variant_get(v, type.c_str(), &list);
+        GVariantIter* raw_list {nullptr};
+        g_variant_get(v, type.c_str(), &raw_list);
+        g_variant_iter_ptr list {raw_list, g_variant_iter_free};
 
-        GVariant* rec {nullptr};
-
-        while ((rec = g_variant_iter_next_value(list))) {
-            ret.insert(from_gvariant<std::pair<decayed_key_type, decayed_mapped_type>>(rec));
-            g_variant_unref(rec);
+        while (GVariant* raw_rec = g_variant_iter_next_value(list.get())) {
+            g_variant_ptr rec {raw_rec, g_variant_unref};
+            ret.insert(from_gvariant<std::pair<decayed_key_type, decayed_mapped_type>>(rec.get()));
         }
-
-        g_variant_iter_free(list);
 
         return ret;
     } else if constexpr (is_variant_v<T>) {

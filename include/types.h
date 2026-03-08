@@ -34,6 +34,7 @@ struct dbus_context {
 
 using g_variant_ptr         = std::unique_ptr<GVariant, decltype(&g_variant_unref)>;
 using g_variant_builder_ptr = std::unique_ptr<GVariantBuilder, decltype(&g_variant_builder_unref)>;
+using g_variant_iter_ptr    = std::unique_ptr<GVariantIter, decltype(&g_variant_iter_free)>;
 using g_dbus_node_info_ptr  = std::unique_ptr<GDBusNodeInfo, decltype(&g_dbus_node_info_unref)>;
 using g_unix_fd_list_ptr    = std::unique_ptr<GUnixFDList, decltype(&g_object_unref)>;
 
