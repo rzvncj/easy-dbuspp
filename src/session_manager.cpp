@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
+#include <main_loop.h>
 #include <object.h>
 #include <session_manager.h>
 
@@ -76,22 +77,41 @@ void session_manager::on_name_lost(GDBusConnection* connection, const gchar* /* 
 {
     auto* manager        = static_cast<session_manager*>(user_data);
     manager->connection_ = connection;
-    throw std::runtime_error("Lost D-Bus name (is another application that owns it already running?)");
+
+    const std::lock_guard lock {manager->name_lost_handler_mutex_};
+
+    if (manager->name_lost_handler_)
+        manager->name_lost_handler_(manager->bus_name_);
+    else
+        g_critical("Lost D-Bus name '%s' (is another application that owns it already running?)",
+                   manager->bus_name_.c_str());
+
+    main_loop::instance().stop();
+}
+
+void session_manager::name_lost_handler(const name_lost_handler_t& handler)
+{
+    const std::lock_guard lock {name_lost_handler_mutex_};
+    name_lost_handler_ = handler;
 }
 
 void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* /* sender_name */,
                                 const gchar* /* object_path */, const gchar* /* interface_name */,
                                 const gchar* signal_name, GVariant* parameters, gpointer user_data)
 {
-    using namespace std::string_literals;
-
     auto* manager = static_cast<session_manager*>(user_data);
     auto  it      = manager->signal_handlers_.find(signal_name);
 
-    if (it == manager->signal_handlers_.end())
-        throw std::runtime_error("No signal handler registered for '"s + signal_name + "''!");
+    if (it == manager->signal_handlers_.end()) {
+        g_warning("No signal handler registered for '%s'", signal_name);
+        return;
+    }
 
-    it->second(parameters);
+    try {
+        it->second(parameters);
+    } catch (const std::exception& e) {
+        g_warning("Exception in signal handler for '%s': %s", signal_name, e.what());
+    }
 }
 
 } // end of namespace easydbuspp

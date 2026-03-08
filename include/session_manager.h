@@ -9,6 +9,7 @@
 #include <functional>
 #include <gio/gio.h>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -51,6 +52,17 @@ public:
     session_manager(const session_manager&)            = delete;
     session_manager& operator=(const session_manager&) = delete;
 
+    //! Type for the name-lost handler callback.
+    using name_lost_handler_t = std::function<void(const std::string& bus_name)>;
+
+    /*!
+     * Set a handler to be called when the bus name is lost. If no handler is set,
+     * a `g_critical()` message will be logged and the main loop will be stopped.
+     *
+     * @param handler A callable that receives the lost bus name as a parameter.
+     */
+    void name_lost_handler(const name_lost_handler_t& handler);
+
     /*!
      * Register a callback to be called when a signal is received.
      *
@@ -91,6 +103,8 @@ private:
     std::unordered_set<object*>                       objects_;
     std::unordered_map<std::string, signal_handler_t> signal_handlers_;
     GDBusConnection*                                  connection_ {nullptr};
+    name_lost_handler_t                               name_lost_handler_;
+    std::mutex                                        name_lost_handler_mutex_;
 
     friend class object;
     friend class proxy;
