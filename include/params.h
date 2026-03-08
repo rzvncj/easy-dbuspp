@@ -133,11 +133,13 @@ std::decay_t<T> extract(GVariant* parameters, gsize index)
 }
 
 template <typename T>
-GVariant* to_gvariant(T t)
+GVariant* to_gvariant(const T& t)
 {
-    if constexpr (std::is_arithmetic_v<T> || decay_same_v<T, const char*>)
-        return g_variant_new(to_dbus_type_string(t).c_str(), t);
-    else if constexpr (decay_same_v<T, std::byte>)
+    if constexpr (std::is_arithmetic_v<T> || decay_same_v<T, const char*>) {
+        // Copy to a local so that a value (not a reference) is passed through C varargs.
+        T copy = t;
+        return g_variant_new(to_dbus_type_string(copy).c_str(), copy);
+    } else if constexpr (decay_same_v<T, std::byte>)
         return g_variant_new(to_dbus_type_string(t).c_str(), std::to_integer<uint8_t>(t));
     else if constexpr (decay_same_v<T, unix_fd_t>)
         return g_variant_new(to_dbus_type_string(t).c_str(), static_cast<gint32>(t));
