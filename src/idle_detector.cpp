@@ -9,8 +9,11 @@ namespace easydbuspp {
 
 idle_detector::~idle_detector() noexcept
 {
-    // TODO: I'm betting that the future::get() call in disable() won't throw.
-    disable();
+    try {
+        disable();
+    } catch (...) {
+        g_warning("Exception in idle_detector::disable() during destruction");
+    }
 }
 
 idle_detector& idle_detector::instance()
