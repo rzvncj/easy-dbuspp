@@ -10,6 +10,10 @@ namespace easydbuspp {
 template <typename R, typename... A>
 R proxy::call(const std::string& method_name, const A&... parameters) const
 {
+    // GLib rejects invalid names without setting an error, so catch them first.
+    if (!g_dbus_is_member_name(method_name.c_str()))
+        throw std::runtime_error("Proxy method call error: '" + method_name + "' is not a valid D-Bus method name");
+
     auto         fn_args = std::make_tuple(parameters...);
     GError*      raw_error {nullptr};
     GUnixFDList* out_fd_list {nullptr};
@@ -25,15 +29,15 @@ R proxy::call(const std::string& method_name, const A&... parameters) const
     g_unix_fd_list_ptr out_fd_list_raii_holder {out_fd_list, g_object_unref};
 
     if (!result)
-        throw std::runtime_error("Proxy method call error: " + std::string {error->message});
+        throw std::runtime_error("Proxy method call error: " + std::string {error ? error->message : "unknown error"});
 
     if constexpr (!std::is_void_v<R>) {
         if constexpr (is_tuple_like_v<R>) {
-            auto ret = from_gvariant<R>(result.get());
+            auto ret = checked_from_gvariant<R>(result.get());
             set_up_from_g_unix_fd_list(out_fd_list, ret);
             return ret;
         } else {
-            auto ret = from_gvariant<std::tuple<R>>(result.get());
+            auto ret = checked_from_gvariant<std::tuple<R>>(result.get());
             set_up_from_g_unix_fd_list(out_fd_list, ret);
             return std::get<0>(ret);
         }
@@ -49,7 +53,7 @@ T proxy::cached_property(const std::string& property_name) const
         throw std::runtime_error("Property '" + property_name
                                  + "' could not be read (doesn't exist or is write-only)!");
 
-    return from_gvariant<T>(result.get());
+    return checked_from_gvariant<T>(result.get());
 }
 
 template <typename T>

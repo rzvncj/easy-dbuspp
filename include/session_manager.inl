@@ -14,6 +14,12 @@ session_manager::signal_handler_t session_manager::generate_signal_handler(C&& c
                                                                            const std::function<void(A...)>&)
 {
     return [callable](GVariant* parameters) {
+        // Anybody can emit a signal with any parameters, so don't trust them.
+        if (!parameters || !g_variant_is_of_type(parameters, to_dbus_type<std::tuple<std::decay_t<A>...>>()))
+            throw std::runtime_error {"Signal parameters are of type '"
+                                      + std::string {parameters ? g_variant_get_type_string(parameters) : "(null)"}
+                                      + "', expected '" + to_dbus_type_string<std::tuple<std::decay_t<A>...>>() + "'!"};
+
         std::tuple<std::decay_t<A>...> fn_args;
         gsize                          arg_index {0};
 

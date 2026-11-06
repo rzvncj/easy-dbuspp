@@ -121,15 +121,33 @@ void extract(GVariant* v, std::variant<Types...>& out)
         throw std::runtime_error {"GVariant type does not match any alternative in std::variant!"};
 }
 
+//! Like from_gvariant(), but throws if the GVariant isn't exactly of the D-Bus type that T maps to.
+template <typename T>
+std::decay_t<T> checked_from_gvariant(GVariant* v)
+{
+    if (!v)
+        throw std::runtime_error {"nullptr GVariant passed into checked_from_gvariant<T>()!"};
+
+    if (!g_variant_is_of_type(v, to_dbus_type<T>()))
+        throw std::runtime_error {"Unexpected D-Bus type '" + std::string {g_variant_get_type_string(v)}
+                                  + "', expected '" + to_dbus_type_string<T>() + "'!"};
+
+    return from_gvariant<T>(v);
+}
+
 template <typename T>
 std::decay_t<T> extract(GVariant* parameters, gsize index)
 {
     if (!parameters)
         throw std::runtime_error {"nullptr parameters passed into extract<T>()!"};
 
+    if (!g_variant_is_of_type(parameters, G_VARIANT_TYPE_TUPLE) || index >= g_variant_n_children(parameters))
+        throw std::runtime_error {"No parameter at index " + std::to_string(index) + " (parameters are of type '"
+                                  + g_variant_get_type_string(parameters) + "')!"};
+
     g_variant_ptr child_value {g_variant_get_child_value(parameters, index), g_variant_unref};
 
-    return from_gvariant<T>(child_value.get());
+    return checked_from_gvariant<T>(child_value.get());
 }
 
 template <typename T>
