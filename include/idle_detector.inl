@@ -24,6 +24,7 @@ void idle_detector::enable(const std::chrono::duration<Rep, Period>& timeout)
     {
         const std::lock_guard lock {idle_mutex_};
         stop_         = false;
+        enabled_      = true;
         request_ping_ = false;
     }
 

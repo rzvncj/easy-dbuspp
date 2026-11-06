@@ -29,7 +29,8 @@ void idle_detector::disable()
 
     {
         const std::lock_guard lock {idle_mutex_};
-        stop_ = true;
+        stop_    = true;
+        enabled_ = false;
     }
 
     idle_cv_.notify_all();
@@ -40,11 +41,11 @@ void idle_detector::disable()
 
 void idle_detector::ping(const object_path_t& object_path)
 {
-    if (!idle_future_.valid())
-        return;
-
     {
         const std::lock_guard lock {idle_mutex_};
+
+        if (!enabled_)
+            return;
 
         if (excluded_objects_.find(object_path) != excluded_objects_.end())
             return;

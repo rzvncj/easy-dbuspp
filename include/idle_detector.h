@@ -63,6 +63,7 @@ private:
     std::mutex              idle_mutex_;
     bool                    request_ping_ {false};
     bool                    stop_ {false};
+    bool                    enabled_ {false}; // Lets ping() avoid touching idle_future_ from other threads.
     std::future<void>       idle_future_;
     std::set<object_path_t> excluded_objects_;
 };
