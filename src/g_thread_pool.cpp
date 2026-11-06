@@ -22,7 +22,8 @@ g_thread_pool::g_thread_pool(GFunc func)
 
 g_thread_pool::~g_thread_pool() noexcept
 {
-    g_thread_pool_free(pool_, TRUE, TRUE);
+    // Not immediate: queued tasks still have to run, or their requests would never be answered or released.
+    g_thread_pool_free(pool_, FALSE, TRUE);
 }
 
 void g_thread_pool::push(gpointer data)
