@@ -18,12 +18,23 @@ int main()
 
         object->add_method("Ping", [] {});
 
+        const auto signal = object->add_broadcast_signal<int>("Signal");
+
         easydbuspp::main_loop::instance().run_async();
 
         wait_for_service(BUS_NAME);
 
         // Destroying the object after its session_manager must not touch the destroyed session_manager.
         session_manager.reset();
+
+        object->publish();
+
+        try {
+            signal(1);
+            throw std::logic_error("Emitting a signal without a session_manager should have thrown!");
+        } catch (const std::runtime_error&) {
+        }
+
         object.reset();
 
         easydbuspp::main_loop::instance().stop();

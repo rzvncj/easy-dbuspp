@@ -33,8 +33,8 @@ class session_manager;
  * that is created after the session_manager already has its bus connection isn't registered automatically: call
  * publish() once it has been set up.
  *
- * An object may be destroyed after its session_manager (which then disconnects it from the bus), but it can't be
- * published or emit signals anymore.
+ * An object may be destroyed after its session_manager (which then disconnects it from the bus). It can't be
+ * published or emit signals anymore: publish() does nothing, and emitting a signal throws std::runtime_error.
  */
 class object {
 

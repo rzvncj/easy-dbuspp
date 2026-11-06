@@ -106,6 +106,12 @@ void object::connect()
 
 void object::publish()
 {
+    // Nothing to publish on if the session_manager is gone.
+    if (!manager_lifetime_->enter<session_manager>())
+        return;
+
+    const request_scope scope {*manager_lifetime_};
+
     if (!session_manager_.connection_)
         return;
 
@@ -316,6 +322,15 @@ void object::g_thread_pool_function(gpointer data, gpointer /* user_data */)
 
 void object::emit_properties_update_signal(const std::string& property_name, GVariant* value) const
 {
+    if (!manager_lifetime_->enter<session_manager>()) {
+        // Nobody is going to consume the floating reference.
+        g_variant_ref_sink(value);
+        g_variant_unref(value);
+        return;
+    }
+
+    const request_scope scope {*manager_lifetime_};
+
     const g_variant_builder_ptr builder {g_variant_builder_new(G_VARIANT_TYPE_ARRAY), g_variant_builder_unref};
     g_variant_builder_add(builder.get(), "{sv}", property_name.c_str(), value);
     GVariant* property_update = g_variant_new("(sa{sv}as)", interface_name_.c_str(), builder.get(), nullptr);

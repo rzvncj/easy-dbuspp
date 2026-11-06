@@ -177,6 +177,11 @@ std::function<void(const std::string&, A...)> object::add_signal(const std::stri
     signals_xml_ += signal_xml;
 
     return [this, name, unicast](const std::string& bus_name, A... args) {
+        if (!manager_lifetime_->enter<session_manager>())
+            throw std::runtime_error("Unable to send signal '" + name + "': the session_manager no longer exists!");
+
+        const request_scope scope {*manager_lifetime_};
+
         if (!session_manager_.connection_)
             throw std::runtime_error("Unable to send signal '" + name
                                      + "': the D-Bus connection needs to be established first!");
