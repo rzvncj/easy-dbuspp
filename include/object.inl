@@ -222,8 +222,11 @@ void object::add_property(const std::string& name, const std::function<T()>& get
     };
 
     auto write_lambda = [this, setter, name](GVariant* new_value) {
-        gboolean ret = setter(from_gvariant<T>(new_value));
-        emit_properties_update_signal(name, new_value);
+        const gboolean ret = setter(from_gvariant<T>(new_value));
+
+        if (ret)
+            emit_properties_update_signal(name, new_value);
+
         return ret;
     };
 

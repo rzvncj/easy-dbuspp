@@ -196,7 +196,12 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
                 pre_handler(request_type::SET_PROPERTY, context);
         }
 
-        return setter(value);
+        // GDBus aborts if a set_property handler returns FALSE without setting an error.
+        if (!setter(value))
+            throw std::runtime_error("Property '"s + property_name + "' for object '"
+                                     + obj_ptr->object_path_.generic_string() + "' rejected the new value!");
+
+        return TRUE;
 
     } catch (const std::exception& e) {
         g_set_error(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED, "%s", e.what());

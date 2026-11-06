@@ -100,6 +100,7 @@ test_names = [
     'methods',
     'dbus_context',
     'properties',
+    'property_setter_rejects',
     'pre_request_handler',
     'broadcast_signal',
     'unicast_signal',
