@@ -262,8 +262,16 @@ void object::add_property(const std::string& name, const std::function<T()>& get
         const gboolean ret = setter(from_gvariant<T>(new_value));
 
         // Announce what the property holds now (the setter may have adjusted it), but never reveal a write-only one.
-        if (ret && getter)
-            emit_properties_update_signal(name, to_gvariant(getter()));
+        // The write has happened by now, so a failure here must not be reported as a failed write.
+        if (ret && getter) {
+            try {
+                emit_properties_update_signal(name, to_gvariant(getter()));
+            } catch (const std::exception& e) {
+                g_warning("Could not announce the new value of property '%s': %s", name.c_str(), e.what());
+            } catch (...) {
+                g_warning("Could not announce the new value of property '%s': unknown exception", name.c_str());
+            }
+        }
 
         return ret;
     };
