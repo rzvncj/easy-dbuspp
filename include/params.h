@@ -184,9 +184,14 @@ GVariant* to_gvariant(const T& t)
 
         g_variant_builder_ptr builder {g_variant_builder_new(G_VARIANT_TYPE(type.c_str())), g_variant_builder_unref};
 
-        for (auto&& [key, value] : t)
+        for (auto&& [key, value] : t) {
+            // Held until g_variant_new() takes its own references, so the first isn't leaked if the second throws.
+            g_variant_ptr key_variant {g_variant_ref_sink(to_gvariant(key)), g_variant_unref};
+            g_variant_ptr value_variant {g_variant_ref_sink(to_gvariant(value)), g_variant_unref};
+
             g_variant_builder_add_value(builder.get(),
-                                        g_variant_new(elem_type.c_str(), to_gvariant(key), to_gvariant(value)));
+                                        g_variant_new(elem_type.c_str(), key_variant.get(), value_variant.get()));
+        }
 
         return g_variant_builder_end(builder.get());
     } else if constexpr (is_variant_v<T>) {
