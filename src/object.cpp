@@ -41,8 +41,8 @@ object::~object() noexcept
 
 std::string object::introspection_xml() const
 {
-    return "<node>\n <interface name='" + interface_name_ + "'>\n" + methods_xml_ + properties_xml_ + signals_xml_
-        + " </interface>\n</node>";
+    return "<node>\n <interface name='" + xml_escape(interface_name_) + "'>\n" + methods_xml_ + properties_xml_
+        + signals_xml_ + " </interface>\n</node>";
 }
 
 // Escapes a string so it can be safely embedded in the introspection XML.
