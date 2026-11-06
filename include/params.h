@@ -10,6 +10,7 @@
 #include <gio/gunixfdlist.h>
 #include <glib-unix.h>
 #include <stdexcept>
+#include <unistd.h>
 
 namespace easydbuspp {
 
@@ -210,59 +211,94 @@ GVariant* to_gvariant(const T& t)
         static_assert(always_false_v<T>, "Don't know how to create a GVariant from T!");
 }
 
+//! Calls f() with every unix_fd_t nested anywhere inside value (tuples, pairs, vectors, map values, variants).
+template <typename T, typename F>
+void for_each_unix_fd(T&& value, F& f)
+{
+    using decayed_type = std::decay_t<T>;
+
+    if constexpr (std::is_same_v<decayed_type, unix_fd_t>) {
+        f(value);
+    } else if constexpr (is_tuple_like_v<decayed_type>) {
+        std::apply(
+            [&f](auto&... elems) {
+                (for_each_unix_fd(elems, f), ...);
+            },
+            value);
+    } else if constexpr (is_vector_v<decayed_type>) {
+        for (auto&& elem : value)
+            for_each_unix_fd(elem, f);
+    } else if constexpr (is_map_like_v<decayed_type>) {
+        for (auto&& entry : value)
+            for_each_unix_fd(entry.second, f);
+    } else if constexpr (is_variant_v<decayed_type>) {
+        std::visit(
+            [&f](auto& alternative) {
+                for_each_unix_fd(alternative, f);
+            },
+            value);
+    }
+}
+
+//! Moves the fds out of input into the returned list, and replaces them in input with their list indexes.
 template <typename... A>
 g_unix_fd_list_ptr extract_g_unix_fd_list(std::tuple<A...>& input)
 {
     g_unix_fd_list_ptr fd_list {nullptr, g_object_unref};
-    gint32             fd_list_index {0};
 
-    auto extract_arg = [&](auto& arg) {
-        if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, unix_fd_t>) {
-            if (!fd_list)
-                fd_list.reset(g_unix_fd_list_new());
+    auto append = [&fd_list](unix_fd_t& fd) {
+        if (!fd_list)
+            fd_list.reset(g_unix_fd_list_new());
 
-            GError* raw_error {nullptr};
+        GError*     raw_error {nullptr};
+        const gint  index = g_unix_fd_list_append(fd_list.get(), static_cast<gint32>(fd), &raw_error);
+        g_error_ptr error {raw_error, g_error_free};
 
-            g_unix_fd_list_append(fd_list.get(), static_cast<gint32>(arg), &raw_error);
-            arg = unix_fd_t {fd_list_index++};
-            g_error_ptr error {raw_error, g_error_free};
+        if (error)
+            throw std::runtime_error("Could not add UNIX fd: " + std::string {error->message});
 
-            if (error)
-                throw std::runtime_error("Could not add UNIX fd: " + std::string {error->message});
-        }
+        fd = unix_fd_t {index};
     };
 
-    std::apply(
-        [&extract_arg](auto&&... args) {
-            ((extract_arg(args)), ...);
-        },
-        input);
+    for_each_unix_fd(input, append);
 
     return fd_list;
 }
 
+//! Replaces the fd list indexes in inout with new fds that the caller owns (none are leaked on failure).
 template <typename... A>
 void set_up_from_g_unix_fd_list(GUnixFDList* fd_list, std::tuple<A...>& inout)
 {
-    auto set_up = [&](auto& arg) {
-        if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, unix_fd_t>) {
-            if (!fd_list)
-                throw std::runtime_error("UNIX fd parameter encountered but no fd list received!");
+    std::vector<int> obtained;
 
-            GError* raw_error {nullptr};
-            arg = unix_fd_t {g_unix_fd_list_get(fd_list, static_cast<gint32>(arg), &raw_error)};
-            g_error_ptr error {raw_error, g_error_free};
+    auto set_up = [&](unix_fd_t& fd) {
+        if (!fd_list)
+            throw std::runtime_error("UNIX fd parameter encountered but no fd list received!");
 
-            if (error)
-                throw std::runtime_error("Could not extract UNIX fd: " + std::string {error->message});
-        }
+        // The index comes from the remote peer, and GLib only asserts (and returns -1) when it's out of range.
+        if (static_cast<gint32>(fd) < 0 || static_cast<gint32>(fd) >= g_unix_fd_list_get_length(fd_list))
+            throw std::runtime_error("UNIX fd index " + std::to_string(static_cast<gint32>(fd))
+                                     + " is out of range of the received fd list!");
+
+        GError*     raw_error {nullptr};
+        const gint  new_fd = g_unix_fd_list_get(fd_list, static_cast<gint32>(fd), &raw_error);
+        g_error_ptr error {raw_error, g_error_free};
+
+        if (error)
+            throw std::runtime_error("Could not extract UNIX fd: " + std::string {error->message});
+
+        obtained.push_back(new_fd);
+        fd = unix_fd_t {new_fd};
     };
 
-    std::apply(
-        [&set_up](auto&&... args) {
-            ((set_up(args)), ...);
-        },
-        inout);
+    try {
+        for_each_unix_fd(inout, set_up);
+    } catch (...) {
+        for (const int fd : obtained)
+            close(fd);
+
+        throw;
+    }
 }
 
 } // end of namespace easydbuspp

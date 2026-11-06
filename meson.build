@@ -107,6 +107,7 @@ test_names = [
     'string_literal_property',
     'move_only_callable',
     'handler_reentrancy',
+    'unix_fd_nested',
     'object_registration',
     'type_mismatch',
     'concurrent_objects',

@@ -495,7 +495,14 @@ easydbuspp::idle_detector::instance().exclude(obj);
 ### Passing UNIX file descriptors between processes
 
 The library supports passing UNIX file descriptors by using the custom `easydbuspp::unix_fd_t`
-type for method parameters and return values. Nothing else is necessary.
+type for method parameters and return values, including when they are nested inside a
+`std::tuple`, `std::pair`, `std::vector`, `std::variant` or the values of a `std::map`.
+Nothing else is necessary.
+
+The library never takes over a file descriptor you send: it sends a duplicate, so the
+original remains yours to close (this includes descriptors a method returns). A descriptor
+you receive (a method parameter, or the value returned by `proxy.call<>()`) is a new one,
+and it is yours to close.
 
 ## D-Bus $\leftrightarrow$ C++ type mapping
 
