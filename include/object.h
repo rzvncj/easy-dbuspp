@@ -14,7 +14,11 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace easydbuspp {
 
@@ -133,7 +137,7 @@ public:
      *                       signal parameters.
      * @return               A function you can now call to emit the signal. Just call it as you would
      *                       any regular function.
-     * @throw                std::runtime_error
+     * @throw                std::runtime_error, also if a signal with this name was already added.
      */
     template <typename... A>
     [[nodiscard]] std::function<void(A...)> add_broadcast_signal(const std::string&              name,
@@ -158,7 +162,7 @@ public:
      *                       This is the destination bus name. So where for a broadcast signal you'd
      *                       just say `my_signal(parameters)` and it would be sent to everyone, here
      *                       you'd need to say `my_signal(<unique_bus_name>, parameters)`.
-     * @throw                std::runtime_error
+     * @throw                std::runtime_error, also if a signal with this name was already added.
      */
     template <typename... A>
     [[nodiscard]] std::function<void(const std::string&, A...)>
@@ -234,6 +238,7 @@ private:
     std::string                                                                                   methods_xml_;
     std::string                                                                                   properties_xml_;
     std::string                                                                                   signals_xml_;
+    std::unordered_set<std::string>                                                               signal_names_;
     std::unordered_map<std::string, method_handler_t>                                             methods_;
     std::unordered_map<std::string, std::pair<property_read_handler_t, property_write_handler_t>> properties_;
     g_dbus_node_info_ptr                                                                          introspection_data_;

@@ -152,6 +152,9 @@ std::function<void(const std::string&, A...)> object::add_signal(const std::stri
         throw std::runtime_error("Signal '" + name
                                  + "': number of in argument names does not match number of arguments!");
 
+    if (!signal_names_.insert(name).second)
+        throw std::runtime_error("Signal '" + name + "' was already added!");
+
     std::string signal_xml {"  <signal name='" + xml_escape(name) + "'>\n"};
 
     int arg_index = 0;

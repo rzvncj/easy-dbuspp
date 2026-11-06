@@ -26,6 +26,8 @@ int main()
         object.add_method("Method", [] {});
         object.add_property("Value", value);
 
+        const auto signal = object.add_broadcast_signal<int>("Signal");
+
         expect_throw(
             [&] {
                 object.add_method("Method", [] {});
@@ -48,6 +50,12 @@ int main()
                     {});
             },
             "A duplicate getter/setter property");
+
+        expect_throw(
+            [&] {
+                const auto duplicate = object.add_unicast_signal<int>("Signal");
+            },
+            "A duplicate signal");
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
