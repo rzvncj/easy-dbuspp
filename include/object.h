@@ -94,7 +94,10 @@ public:
      * @param name  The name of the property, as displayed when introspecting the D-Bus object.
      * @param value Any library supported value at all. The machinery behind this function will automatically
      *              detect and decide whether this will be a read-only or a readwrite property, based on
-     *              whether it is a C++ lvalue or not.
+     *              whether it is a non-const C++ lvalue or not. A non-const lvalue is read and written in
+     *              place, so it must outlive the object. Anything else (an rvalue, a const lvalue, a C string)
+     *              is copied once, right now, and becomes a read-only property that never sees later changes
+     *              to the original.
      */
     template <typename T>
     void add_property(const std::string& name, T&& value);
@@ -109,7 +112,8 @@ public:
      *               will be used to retrieve the value of the property on each property query.
      * @param setter A setter function (i.e. anything taking a `const T&` argument and returning a
      *               `bool` signifying success/failure to set). This will be called when a D-Bus client
-     *               will try to set the variable.
+     *               will try to set the variable. When it succeeds and there is a getter, a
+     *               `"PropertiesChanged"` signal carrying the getter's value is emitted.
      */
     template <typename T>
     void add_property(const std::string& name, const std::function<T()>& getter,

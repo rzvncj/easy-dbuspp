@@ -108,6 +108,7 @@ test_names = [
     'move_only_callable',
     'handler_reentrancy',
     'unix_fd_nested',
+    'properties_changed',
     'object_registration',
     'type_mismatch',
     'concurrent_objects',

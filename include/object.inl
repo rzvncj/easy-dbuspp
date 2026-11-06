@@ -199,7 +199,7 @@ void object::add_property(const std::string& name, T&& value)
             },
             [this, &value, name](GVariant* new_value) {
                 value = from_gvariant<T>(new_value);
-                emit_properties_update_signal(name, new_value);
+                emit_properties_update_signal(name, to_gvariant(value));
                 return TRUE;
             });
     }
@@ -232,11 +232,12 @@ void object::add_property(const std::string& name, const std::function<T()>& get
         return to_gvariant(getter());
     };
 
-    auto write_lambda = [this, setter, name](GVariant* new_value) {
+    auto write_lambda = [this, getter, setter, name](GVariant* new_value) {
         const gboolean ret = setter(from_gvariant<T>(new_value));
 
-        if (ret)
-            emit_properties_update_signal(name, new_value);
+        // Announce what the property holds now (the setter may have adjusted it), but never reveal a write-only one.
+        if (ret && getter)
+            emit_properties_update_signal(name, to_gvariant(getter()));
 
         return ret;
     };
