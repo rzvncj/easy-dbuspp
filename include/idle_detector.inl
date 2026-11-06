@@ -13,6 +13,8 @@ namespace easydbuspp {
 template <typename Rep, typename Period>
 void idle_detector::enable(const std::chrono::duration<Rep, Period>& timeout)
 {
+    const std::lock_guard control_lock {control_mutex_};
+
     if (idle_future_.valid()) {
         // A detector whose timeout has fired has finished its thread; reap it so it can be enabled again.
         if (idle_future_.wait_for(std::chrono::seconds::zero()) != std::future_status::ready)

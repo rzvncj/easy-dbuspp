@@ -24,6 +24,8 @@ idle_detector& idle_detector::instance()
 
 void idle_detector::disable()
 {
+    const std::lock_guard control_lock {control_mutex_};
+
     if (!idle_future_.valid())
         return;
 

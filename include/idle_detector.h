@@ -61,6 +61,7 @@ public:
 private:
     std::condition_variable idle_cv_;
     std::mutex              idle_mutex_;
+    std::mutex              control_mutex_; // Serializes enable() and disable(), which own idle_future_.
     bool                    request_ping_ {false};
     bool                    stop_ {false};
     bool                    enabled_ {false}; // Lets ping() avoid touching idle_future_ from other threads.
