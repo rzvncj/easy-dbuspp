@@ -34,6 +34,10 @@ int main()
         easydbuspp::org_freedesktop_dbus_proxy dbus_proxy(proxy_session_manager);
         std::string                            unique_bus_name = dbus_proxy.unique_bus_name(BUS_NAME);
 
+        if (dbus_proxy.unique_bus_name() != proxy.unique_bus_name())
+            throw std::runtime_error(
+                "The proxy's own unique bus name is not reachable through org_freedesktop_dbus_proxy!");
+
         proxy_session_manager.signal_subscribe(
             "UnicastSignal",
             [](const std::string& s) {

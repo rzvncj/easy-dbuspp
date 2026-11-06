@@ -23,6 +23,9 @@ public:
     explicit org_freedesktop_dbus_proxy(session_manager& session_mgr);
 
 public:
+    //! Keep proxy::unique_bus_name(), which returns our own unique bus name, visible next to the overload below.
+    using proxy::unique_bus_name;
+
     //! Get the unique bus name of a well-known bus name.
     std::string unique_bus_name(const std::string& well_known_bus_name) const;
 
