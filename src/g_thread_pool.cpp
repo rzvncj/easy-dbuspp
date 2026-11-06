@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
+#include <algorithm>
 #include <g_thread_pool.h>
 #include <stdexcept>
 #include <types.h>
@@ -13,7 +14,9 @@ g_thread_pool::g_thread_pool(GFunc func)
     GError* raw_error {nullptr};
 
     // Not exclusive: threads are started on demand (and reaped when idle) instead of all of them up front.
-    pool_ = g_thread_pool_new(func, nullptr, g_get_num_processors(), FALSE, &raw_error);
+    // At least 4 threads, so a few methods can wait on synchronous calls to other objects of this process (which
+    // need threads of their own) even on a machine with a single CPU.
+    pool_ = g_thread_pool_new(func, nullptr, std::max<gint>(4, g_get_num_processors()), FALSE, &raw_error);
     g_error_ptr error {raw_error, g_error_free};
 
     if (!pool_)
