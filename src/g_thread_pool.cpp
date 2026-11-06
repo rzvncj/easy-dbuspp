@@ -11,7 +11,9 @@ namespace easydbuspp {
 g_thread_pool::g_thread_pool(GFunc func)
 {
     GError* raw_error {nullptr};
-    pool_ = g_thread_pool_new(func, nullptr, g_get_num_processors(), TRUE, &raw_error);
+
+    // Not exclusive: threads are started on demand (and reaped when idle) instead of all of them up front.
+    pool_ = g_thread_pool_new(func, nullptr, g_get_num_processors(), FALSE, &raw_error);
     g_error_ptr error {raw_error, g_error_free};
 
     if (!pool_)

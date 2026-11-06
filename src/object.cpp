@@ -8,8 +8,6 @@
 
 namespace easydbuspp {
 
-g_thread_pool object::thread_pool_ {g_thread_pool_function};
-
 namespace {
 
 void return_method_error(GDBusMethodInvocation* invocation, const gchar* interface_name, const char* message) noexcept
@@ -172,7 +170,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
                 }
             });
 
-            thread_pool_.push(task.get());
+            thread_pool().push(task.get());
             task.release();
 
         } catch (...) {
@@ -294,6 +292,12 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
         g_set_error_literal(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED, "Unknown exception!");
         return FALSE;
     }
+}
+
+g_thread_pool& object::thread_pool()
+{
+    static g_thread_pool pool {g_thread_pool_function};
+    return pool;
 }
 
 void object::g_thread_pool_function(gpointer data, gpointer /* user_data */)

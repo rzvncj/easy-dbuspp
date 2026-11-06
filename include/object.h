@@ -221,6 +221,9 @@ private:
 
     static void g_thread_pool_function(gpointer data, gpointer user_data);
 
+    //! Runs the methods. Created on first use, so programs that never serve a method don't pay for it.
+    static g_thread_pool& thread_pool();
+
 private:
     session_manager&                                                                              session_manager_;
     guint                                                                                         registration_id_ {0};
@@ -232,7 +235,6 @@ private:
     std::unordered_map<std::string, method_handler_t>                                             methods_;
     std::unordered_map<std::string, std::pair<property_read_handler_t, property_write_handler_t>> properties_;
     g_dbus_node_info_ptr                                                                          introspection_data_;
-    static g_thread_pool                                                                          thread_pool_;
     pre_request_handler_t                                                                         pre_request_handler_;
     std::mutex                               pre_request_handler_mutex_;
     lifetime_guard_ptr                       lifetime_ {std::make_shared<lifetime_guard>(this)};
