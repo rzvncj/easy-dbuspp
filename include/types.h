@@ -23,7 +23,7 @@ enum class bus_type_t { SESSION, SYSTEM };
 
 using object_path_t = std::filesystem::path;
 
-enum class unix_fd_t : gint32 {};
+enum class unix_fd_t : gint32 { };
 
 struct dbus_context {
     std::string   bus_name;
@@ -59,10 +59,10 @@ inline constexpr bool is_output_type_v = is_output_type<T>::value;
 
 // is_specialization_of<> lifted from the WG21 P2098R0 proposal document.
 template <typename T, template <typename...> typename Primary>
-struct is_specialization_of : std::false_type {};
+struct is_specialization_of : std::false_type { };
 
 template <template <typename...> typename Primary, typename... Args>
-struct is_specialization_of<Primary<Args...>, Primary> : std::true_type {};
+struct is_specialization_of<Primary<Args...>, Primary> : std::true_type { };
 
 template <typename T, template <typename...> typename Primary>
 inline constexpr bool is_specialization_of_v = is_specialization_of<T, Primary>::value;
