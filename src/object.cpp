@@ -116,6 +116,9 @@ void object::publish()
 
     const request_scope scope {*manager_lifetime_};
 
+    // Same lock as the bus-acquired callback, which connects this object too.
+    const std::lock_guard lock {registry_->mutex};
+
     if (!session_manager_.connection_)
         return;
 
