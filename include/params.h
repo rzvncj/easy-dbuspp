@@ -7,6 +7,7 @@
 
 #include "type_mapping.h"
 #include "types.h"
+#include <cstring>
 #include <gio/gunixfdlist.h>
 #include <glib-unix.h>
 #include <stdexcept>
@@ -163,15 +164,18 @@ GVariant* to_gvariant(const T& t)
     else if constexpr (decay_same_v<T, unix_fd_t>)
         return g_variant_new(to_dbus_type_string(t).c_str(), static_cast<gint32>(t));
     else if constexpr (decay_same_v<T, std::string>) {
-        // GLib would log a critical and hand back garbage (or NULL) instead of failing.
+        // GLib would log a critical and hand back garbage (or NULL) instead of failing, or cut the string at a NUL.
         if (!g_utf8_validate(t.c_str(), -1, nullptr))
             throw std::runtime_error {"Can't convert a string that isn't valid UTF-8 to a GVariant!"};
+
+        if (std::strlen(t.c_str()) != t.size())
+            throw std::runtime_error {"Can't convert a string with an embedded NUL character to a GVariant!"};
 
         return g_variant_new(to_dbus_type_string(t).c_str(), t.c_str());
     } else if constexpr (decay_same_v<T, object_path_t>) {
         const std::string path {t.generic_string()};
 
-        if (!g_variant_is_object_path(path.c_str()))
+        if (std::strlen(path.c_str()) != path.size() || !g_variant_is_object_path(path.c_str()))
             throw std::runtime_error {"'" + path + "' is not a valid D-Bus object path!"};
 
         return g_variant_new(to_dbus_type_string(t).c_str(), path.c_str());

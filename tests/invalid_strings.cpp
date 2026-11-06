@@ -31,6 +31,12 @@ int main()
             },
             "A string that isn't valid UTF-8");
 
+        expect_throw(
+            [] {
+                to_gvariant(std::make_tuple(std::string {"a\0b", 3}));
+            },
+            "A string with an embedded NUL");
+
         const g_variant_ptr path {g_variant_ref_sink(to_gvariant(object_path_t {"/net/test/Path"})), g_variant_unref};
 
         if (!path || !g_variant_is_of_type(path.get(), G_VARIANT_TYPE_OBJECT_PATH))
