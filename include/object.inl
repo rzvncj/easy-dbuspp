@@ -95,19 +95,28 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
 
         set_up_from_g_unix_fd_list(fd_list, fn_args);
 
-        if constexpr (!std::is_void_v<R>) {
-            if constexpr (is_tuple_like_v<R>) {
-                auto ret         = std::apply(*shared_callable, fn_args);
-                auto out_fd_list = extract_g_unix_fd_list(ret);
-                return std::pair {to_gvariant(ret), std::move(out_fd_list)};
+        // The handler owns the fds it receives, but if it throws it can't be expected to have closed them.
+        const auto received_fds = snapshot_fds(fn_args);
+
+        try {
+            if constexpr (!std::is_void_v<R>) {
+                if constexpr (is_tuple_like_v<R>) {
+                    auto ret         = std::apply(*shared_callable, fn_args);
+                    auto out_fd_list = extract_g_unix_fd_list(ret);
+                    return std::pair {to_gvariant(ret), std::move(out_fd_list)};
+                } else {
+                    auto wrapper     = std::tuple {std::apply(*shared_callable, fn_args)};
+                    auto out_fd_list = extract_g_unix_fd_list(wrapper);
+                    return std::pair {to_gvariant(wrapper), std::move(out_fd_list)};
+                }
             } else {
-                auto wrapper     = std::tuple {std::apply(*shared_callable, fn_args)};
-                auto out_fd_list = extract_g_unix_fd_list(wrapper);
-                return std::pair {to_gvariant(wrapper), std::move(out_fd_list)};
+                std::apply(*shared_callable, fn_args);
+                return std::pair<GVariant*, g_unix_fd_list_ptr> {nullptr,
+                                                                 g_unix_fd_list_ptr {nullptr, g_object_unref}};
             }
-        } else {
-            std::apply(*shared_callable, fn_args);
-            return std::pair<GVariant*, g_unix_fd_list_ptr> {nullptr, g_unix_fd_list_ptr {nullptr, g_object_unref}};
+        } catch (...) {
+            close_unchanged_fds(received_fds);
+            throw;
         }
     };
 }

@@ -502,7 +502,8 @@ Nothing else is necessary.
 The library never takes over a file descriptor you send: it sends a duplicate, so the
 original remains yours to close (this includes descriptors a method returns). A descriptor
 you receive (a method parameter, or the value returned by `proxy.call<>()`) is a new one,
-and it is yours to close.
+and it is yours to close. The exception is a method that throws: the library then closes whichever
+of the descriptors it received are still open, so a failing method doesn't leak them.
 
 ## D-Bus $\leftrightarrow$ C++ type mapping
 

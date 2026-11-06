@@ -11,6 +11,7 @@
 #include <gio/gunixfdlist.h>
 #include <glib-unix.h>
 #include <stdexcept>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace easydbuspp {
@@ -282,6 +283,45 @@ g_unix_fd_list_ptr extract_g_unix_fd_list(std::tuple<A...>& input)
     for_each_unix_fd(input, append);
 
     return fd_list;
+}
+
+//! Identifies the file a descriptor referred to, to tell later whether the descriptor still refers to it.
+struct fd_identity {
+    int   fd;
+    dev_t dev;
+    ino_t ino;
+};
+
+//! Records the fds in input, which must be open.
+template <typename... A>
+std::vector<fd_identity> snapshot_fds(std::tuple<A...>& input)
+{
+    std::vector<fd_identity> ret;
+
+    auto record = [&ret](unix_fd_t& fd) {
+        struct stat st {};
+
+        if (fstat(static_cast<int>(fd), &st) == 0)
+            ret.push_back({static_cast<int>(fd), st.st_dev, st.st_ino});
+    };
+
+    for_each_unix_fd(input, record);
+
+    return ret;
+}
+
+/*
+ * Closes the recorded fds that are still open and still refer to the same file. Whoever handled them may have
+ * closed some already, and those numbers must not be closed again.
+ */
+inline void close_unchanged_fds(const std::vector<fd_identity>& fds) noexcept
+{
+    for (const auto& [fd, dev, ino] : fds) {
+        struct stat st {};
+
+        if (fstat(fd, &st) == 0 && st.st_dev == dev && st.st_ino == ino)
+            close(fd);
+    }
 }
 
 //! Replaces the fd list indexes in inout with new fds that the caller owns (none are leaked on failure).
