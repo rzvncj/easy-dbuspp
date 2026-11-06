@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
+#include "wait_for_service.h"
 #include <atomic>
 #include <chrono>
 #include <easydbuspp.h>
@@ -32,6 +33,8 @@ int main()
         });
 
         easydbuspp::main_loop::instance().run_async();
+
+        wait_for_service(BUS_NAME);
 
         easydbuspp::session_manager proxy_session_manager {easydbuspp::bus_type_t::SESSION};
         easydbuspp::proxy           proxy {proxy_session_manager, BUS_NAME, INTERFACE_NAME, OBJECT_PATH};
