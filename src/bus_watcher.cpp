@@ -38,19 +38,27 @@ void bus_watcher::on_name_disappeared(GDBusConnection* /* connection */, const g
 {
     auto* watcher = static_cast<bus_watcher*>(user_data);
 
-    const std::lock_guard lock {watcher->name_appeared_cv_mutex_};
+    std::function<void()> handler;
 
-    if (watcher->name_appeared_ && watcher->disappeared_handler_) {
+    {
+        const std::lock_guard lock {watcher->name_appeared_cv_mutex_};
+
+        if (watcher->name_appeared_)
+            handler = watcher->disappeared_handler_;
+
+        watcher->name_appeared_ = false;
+    }
+
+    // Called without the lock, so the handler is free to call back into the watcher.
+    if (handler) {
         try {
-            watcher->disappeared_handler_();
+            handler();
         } catch (const std::exception& e) {
             g_warning("Exception in bus_watcher disappeared handler: %s", e.what());
         } catch (...) {
             g_warning("Unknown exception in bus_watcher disappeared handler");
         }
     }
-
-    watcher->name_appeared_ = false;
 }
 
 } // end of namespace easydbuspp

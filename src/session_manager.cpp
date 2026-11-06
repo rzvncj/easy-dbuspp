@@ -124,11 +124,17 @@ void session_manager::on_name_lost(GDBusConnection* connection, const gchar* /* 
 
     manager->set_connection(connection);
 
-    const std::lock_guard lock {manager->name_lost_handler_mutex_};
+    name_lost_handler_t handler;
 
-    if (manager->name_lost_handler_) {
+    {
+        const std::lock_guard lock {manager->name_lost_handler_mutex_};
+        handler = manager->name_lost_handler_;
+    }
+
+    // Called without the lock, so the handler is free to replace itself.
+    if (handler) {
         try {
-            manager->name_lost_handler_(manager->bus_name_);
+            handler(manager->bus_name_);
         } catch (const std::exception& e) {
             g_warning("Exception in name_lost_handler: %s", e.what());
         } catch (...) {
