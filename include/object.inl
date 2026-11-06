@@ -24,7 +24,7 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
     }
 
     size_t      arg_index {0};
-    std::string method_xml {"  <method name='" + name + "'>\n"};
+    std::string method_xml {"  <method name='" + xml_escape(name) + "'>\n"};
 
     (
         [&]() {
@@ -34,7 +34,7 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
                 if (!in_argument_names.empty()) {
                     if (arg_index == in_argument_names.size())
                         throw std::runtime_error("Method '" + name + "': too few input argument names provided!");
-                    arg_name = in_argument_names[arg_index];
+                    arg_name = xml_escape(in_argument_names[arg_index]);
                 }
 
                 method_xml
@@ -58,14 +58,15 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
                 [&method_xml, &out_argument_names, &arg_index](auto&&... args) {
                     ((method_xml += "   <arg name='"
                           + (out_argument_names.empty() ? "out_arg" + std::to_string(arg_index++)
-                                                        : out_argument_names[arg_index++])
+                                                        : xml_escape(out_argument_names[arg_index++]))
                           + "' type='" + to_dbus_type_string(args) + "' direction='out'/>\n"),
                      ...);
                 },
                 output);
         } else
-            method_xml += "   <arg name='" + (out_argument_names.empty() ? "out_arg0" : out_argument_names[0])
-                + "' type='" + to_dbus_type_string<R>() + "' direction='out'/>\n";
+            method_xml += "   <arg name='"
+                + (out_argument_names.empty() ? "out_arg0" : xml_escape(out_argument_names[0])) + "' type='"
+                + to_dbus_type_string<R>() + "' direction='out'/>\n";
     }
 
     method_xml += "  </method>\n";
@@ -145,12 +146,13 @@ std::function<void(const std::string&, A...)> object::add_signal(const std::stri
         throw std::runtime_error("Signal '" + name
                                  + "': number of in argument names does not match number of arguments!");
 
-    std::string signal_xml {"  <signal name='" + name + "'>\n"};
+    std::string signal_xml {"  <signal name='" + xml_escape(name) + "'>\n"};
 
     int arg_index = 0;
 
     ((signal_xml += "   <arg type='" + to_dbus_type_string<A>() + "' name='"
-          + (argument_names.empty() ? "arg" + std::to_string(arg_index++) : argument_names[arg_index++]) + "'/>\n"),
+          + (argument_names.empty() ? "arg" + std::to_string(arg_index++) : xml_escape(argument_names[arg_index++]))
+          + "'/>\n"),
      ...);
 
     signal_xml += "  </signal>\n";
@@ -172,7 +174,8 @@ std::function<void(const std::string&, A...)> object::add_signal(const std::stri
 template <typename T>
 void object::add_property(const std::string& name, T&& value)
 {
-    std::string property_xml {"  <property name='" + name + "' type='" + to_dbus_type_string<T>() + "' access='"};
+    std::string property_xml {"  <property name='" + xml_escape(name) + "' type='" + to_dbus_type_string<T>()
+                              + "' access='"};
 
     if constexpr (!is_output_type_v<T>) {
         property_xml += "read";
@@ -205,7 +208,8 @@ void object::add_property(const std::string& name, const std::function<T()>& get
     if (!setter && !getter)
         throw std::runtime_error("Property '" + name + "': needs to provide at least a setter or a getter!");
 
-    std::string property_xml {"  <property name='" + name + "' type='" + to_dbus_type_string<T>() + "' access='"};
+    std::string property_xml {"  <property name='" + xml_escape(name) + "' type='" + to_dbus_type_string<T>()
+                              + "' access='"};
 
     if (!setter)
         property_xml += "read";

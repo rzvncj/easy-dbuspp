@@ -10,6 +10,17 @@ namespace easydbuspp {
 
 g_thread_pool object::thread_pool_ {g_thread_pool_function};
 
+namespace {
+
+void return_method_error(GDBusMethodInvocation* invocation, const gchar* interface_name, const char* message) noexcept
+{
+    const std::unique_ptr<gchar, decltype(&g_free)> error_name {g_strconcat(interface_name, ".MethodError", nullptr),
+                                                                g_free};
+    g_dbus_method_invocation_return_dbus_error(invocation, error_name.get(), message);
+}
+
+} // end of anonymous namespace
+
 object::object(session_manager& session_mgr, const std::string& interface_name, const object_path_t& object_path)
     : session_manager_ {session_mgr}, interface_name_ {interface_name}, object_path_ {object_path},
       introspection_data_ {nullptr, g_dbus_node_info_unref}
@@ -26,6 +37,13 @@ std::string object::introspection_xml() const
 {
     return "<node>\n <interface name='" + interface_name_ + "'>\n" + methods_xml_ + properties_xml_ + signals_xml_
         + " </interface>\n</node>";
+}
+
+// Escapes a string so it can be safely embedded in the introspection XML.
+std::string object::xml_escape(const std::string& text)
+{
+    const std::unique_ptr<gchar, decltype(&g_free)> escaped {g_markup_escape_text(text.c_str(), -1), g_free};
+    return escaped.get();
 }
 
 std::string object::interface_name() const
@@ -78,44 +96,53 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 {
     using namespace std::string_literals;
 
-    const dbus_context context {sender, interface_name, object_path, method_name};
+    // Exceptions must not propagate into GLib, so everything up to the hand-off to the thread pool is guarded.
+    try {
+        const dbus_context context {sender, interface_name, object_path, method_name};
 
-    auto task = std::make_unique<std::function<void()>>([=] {
-        try {
-            auto* obj_ptr = static_cast<object*>(user_data);
+        auto task = std::make_unique<std::function<void()>>([=] {
+            try {
+                auto* obj_ptr = static_cast<object*>(user_data);
 
-            idle_detector::instance().ping(obj_ptr->object_path());
+                idle_detector::instance().ping(obj_ptr->object_path());
 
-            auto it = obj_ptr->methods_.find(method_name);
+                auto it = obj_ptr->methods_.find(method_name);
 
-            if (it == obj_ptr->methods_.end())
-                throw std::runtime_error("No method '"s + method_name + "' registered by object '"
-                                         + obj_ptr->object_path_.generic_string() + "'!");
+                if (it == obj_ptr->methods_.end())
+                    throw std::runtime_error("No method '"s + method_name + "' registered by object '"
+                                             + obj_ptr->object_path_.generic_string() + "'!");
 
-            {
-                pre_request_handler_t pre_handler;
                 {
-                    const std::lock_guard lock {obj_ptr->pre_request_handler_mutex_};
-                    pre_handler = obj_ptr->pre_request_handler_;
+                    pre_request_handler_t pre_handler;
+                    {
+                        const std::lock_guard lock {obj_ptr->pre_request_handler_mutex_};
+                        pre_handler = obj_ptr->pre_request_handler_;
+                    }
+                    if (pre_handler)
+                        pre_handler(request_type::METHOD, context);
                 }
-                if (pre_handler)
-                    pre_handler(request_type::METHOD, context);
+
+                GDBusMessage* message = g_dbus_method_invocation_get_message(invocation);
+                GUnixFDList*  fd_list = g_dbus_message_get_unix_fd_list(message);
+
+                auto [ret, out_fd_list] = it->second(parameters, fd_list, context);
+                g_dbus_method_invocation_return_value_with_unix_fd_list(invocation, ret, out_fd_list.get());
+
+            } catch (const std::exception& e) {
+                return_method_error(invocation, interface_name, e.what());
+            } catch (...) {
+                return_method_error(invocation, interface_name, "Unknown exception!");
             }
+        });
 
-            GDBusMessage* message = g_dbus_method_invocation_get_message(invocation);
-            GUnixFDList*  fd_list = g_dbus_message_get_unix_fd_list(message);
+        thread_pool_.push(task.get());
+        task.release();
 
-            auto [ret, out_fd_list] = it->second(parameters, fd_list, context);
-            g_dbus_method_invocation_return_value_with_unix_fd_list(invocation, ret, out_fd_list.get());
-
-        } catch (const std::exception& e) {
-            const std::string error_name {std::string {interface_name} + ".MethodError"};
-            g_dbus_method_invocation_return_dbus_error(invocation, error_name.c_str(), e.what());
-        }
-    });
-
-    thread_pool_.push(task.get());
-    task.release();
+    } catch (const std::exception& e) {
+        return_method_error(invocation, interface_name, e.what());
+    } catch (...) {
+        return_method_error(invocation, interface_name, "Unknown exception!");
+    }
 }
 
 GVariant* object::handle_get_property(GDBusConnection* /* connection */, const gchar* sender, const gchar* object_path,
@@ -157,6 +184,9 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
 
     } catch (const std::exception& e) {
         g_set_error(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED, "%s", e.what());
+        return nullptr;
+    } catch (...) {
+        g_set_error_literal(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED, "Unknown exception!");
         return nullptr;
     }
 }
@@ -205,6 +235,9 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
 
     } catch (const std::exception& e) {
         g_set_error(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED, "%s", e.what());
+        return FALSE;
+    } catch (...) {
+        g_set_error_literal(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED, "Unknown exception!");
         return FALSE;
     }
 }

@@ -168,7 +168,8 @@ public:
     object_path_t object_path() const;
 
 private:
-    std::string introspection_xml() const;
+    std::string        introspection_xml() const;
+    static std::string xml_escape(const std::string& text);
 
     void connect();
     void disconnect();

@@ -101,6 +101,7 @@ test_names = [
     'dbus_context',
     'properties',
     'property_setter_rejects',
+    'exception_safety',
     'pre_request_handler',
     'broadcast_signal',
     'unicast_signal',

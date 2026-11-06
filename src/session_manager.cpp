@@ -68,8 +68,15 @@ void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* 
         manager->connection_ = static_cast<GDBusConnection*>(g_object_ref(connection));
     }
 
-    for (auto&& obj_ptr : manager->objects_)
-        obj_ptr->connect();
+    for (auto&& obj_ptr : manager->objects_) {
+        try {
+            obj_ptr->connect();
+        } catch (const std::exception& e) {
+            g_critical("Could not connect object '%s': %s", obj_ptr->object_path().c_str(), e.what());
+        } catch (...) {
+            g_critical("Could not connect object '%s': unknown exception", obj_ptr->object_path().c_str());
+        }
+    }
 }
 
 void session_manager::on_name_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
@@ -136,6 +143,8 @@ void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* 
         handler(parameters);
     } catch (const std::exception& e) {
         g_warning("Exception in signal handler for '%s': %s", signal_name, e.what());
+    } catch (...) {
+        g_warning("Unknown exception in signal handler for '%s'", signal_name);
     }
 }
 
