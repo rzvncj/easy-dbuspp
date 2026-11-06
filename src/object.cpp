@@ -315,6 +315,11 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
 
 g_thread_pool& object::thread_pool()
 {
+    // Tasks still queued at exit run in the pool's destructor and use these singletons. Statics are destroyed in
+    // reverse order of construction, so make sure these are constructed first and so outlive the pool.
+    idle_detector::instance();
+    main_loop::instance();
+
     static g_thread_pool pool {g_thread_pool_function};
     return pool;
 }
