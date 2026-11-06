@@ -49,7 +49,8 @@ public:
      */
     session_manager(bus_type_t bus_type, const std::string& bus_name);
 
-    //! Destructor. Detaches attached objects, drops signal subscriptions, releases the bus name.
+    //! Destructor. Detaches attached objects, drops signal subscriptions, releases the bus name. Waits for running
+    //! callbacks, so don't destroy a session_manager from one of its own handlers.
     ~session_manager() noexcept;
 
     session_manager(const session_manager&)            = delete;

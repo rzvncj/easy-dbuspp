@@ -5,6 +5,7 @@
 #ifndef EASYDBUSPP_BUS_WATCHER_H_INCLUDED
 #define EASYDBUSPP_BUS_WATCHER_H_INCLUDED
 
+#include "lifetime_guard.h"
 #include "types.h"
 #include <chrono>
 #include <condition_variable>
@@ -30,7 +31,7 @@ public:
      */
     explicit bus_watcher(bus_type_t bus_type, const std::string& bus_name, bool start = false);
 
-    //! Destructor.
+    //! Destructor. Waits for callbacks that are running, so don't destroy a watcher from its own handler.
     ~bus_watcher() noexcept;
 
     bus_watcher(const bus_watcher&)            = delete;
@@ -56,6 +57,7 @@ private:
     bool                    name_appeared_ {false};
     guint                   watcher_id_ {0};
     std::function<void()>   disappeared_handler_;
+    lifetime_guard_ptr      lifetime_ {std::make_shared<lifetime_guard>(this)};
 };
 
 } // end of namespace easydbuspp

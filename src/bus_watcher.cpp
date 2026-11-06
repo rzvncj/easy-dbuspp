@@ -11,11 +11,14 @@ bus_watcher::bus_watcher(bus_type_t bus_type, const std::string& bus_name, bool 
     // Done here, once every member exists, because the callbacks may run on a main loop thread right away.
     watcher_id_ = g_bus_watch_name(to_g_bus_type(bus_type), bus_name.c_str(),
                                    start ? G_BUS_NAME_WATCHER_FLAGS_AUTO_START : G_BUS_NAME_WATCHER_FLAGS_NONE,
-                                   on_name_appeared, on_name_disappeared, this, nullptr);
+                                   on_name_appeared, on_name_disappeared, new lifetime_guard_ptr {lifetime_},
+                                   free_lifetime_guard_ptr);
 }
 
 bus_watcher::~bus_watcher() noexcept
 {
+    // Callbacks may be running on the main loop thread right now. Wait for them, and refuse later ones.
+    lifetime_->close();
     g_bus_unwatch_name(watcher_id_);
 }
 
@@ -28,7 +31,13 @@ void bus_watcher::bus_name_disappeared_handler(const std::function<void()>& disa
 void bus_watcher::on_name_appeared(GDBusConnection* /* connection */, const gchar* /* name */,
                                    const gchar* /* name_owner */, gpointer user_data)
 {
-    auto* watcher = static_cast<bus_watcher*>(user_data);
+    const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+    auto*      watcher = guard->enter<bus_watcher>();
+
+    if (!watcher)
+        return;
+
+    const request_scope scope {*guard};
 
     const std::lock_guard lock {watcher->name_appeared_cv_mutex_};
     watcher->name_appeared_ = true;
@@ -37,7 +46,13 @@ void bus_watcher::on_name_appeared(GDBusConnection* /* connection */, const gcha
 
 void bus_watcher::on_name_disappeared(GDBusConnection* /* connection */, const gchar* /* name */, gpointer user_data)
 {
-    auto* watcher = static_cast<bus_watcher*>(user_data);
+    const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+    auto*      watcher = guard->enter<bus_watcher>();
+
+    if (!watcher)
+        return;
+
+    const request_scope scope {*guard};
 
     std::function<void()> handler;
 

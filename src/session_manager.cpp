@@ -25,7 +25,7 @@ session_manager::session_manager(bus_type_t bus_type, const std::string& bus_nam
     owner_id_ = g_bus_own_name(
         to_g_bus_type(bus_type), bus_name.c_str(),
         static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
-        on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr);
+        on_bus_acquired, on_name_acquired, on_name_lost, new lifetime_guard_ptr {lifetime_}, free_lifetime_guard_ptr);
 }
 
 session_manager::~session_manager() noexcept
@@ -42,7 +42,8 @@ session_manager::~session_manager() noexcept
             g_dbus_connection_signal_unsubscribe(connection_, id);
     }
 
-    // The connection is shared and outlives us, so signals may still be in flight. Wait for them.
+    // The connection is shared and outlives us, so signals may still be in flight, and so may be the bus name
+    // callbacks. Wait for them.
     lifetime_->close();
 
     {
@@ -99,7 +100,13 @@ void session_manager::set_connection(GDBusConnection* connection)
 
 void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    auto* manager = static_cast<session_manager*>(user_data);
+    const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+    auto*      manager = guard->enter<session_manager>();
+
+    if (!manager)
+        return;
+
+    const request_scope scope {*guard};
 
     manager->set_connection(connection);
 
@@ -118,14 +125,26 @@ void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* 
 
 void session_manager::on_name_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    auto* manager = static_cast<session_manager*>(user_data);
+    const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+    auto*      manager = guard->enter<session_manager>();
+
+    if (!manager)
+        return;
+
+    const request_scope scope {*guard};
 
     manager->set_connection(connection);
 }
 
 void session_manager::on_name_lost(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
-    auto* manager = static_cast<session_manager*>(user_data);
+    const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+    auto*      manager = guard->enter<session_manager>();
+
+    if (!manager)
+        return;
+
+    const request_scope scope {*guard};
 
     manager->set_connection(connection);
 
