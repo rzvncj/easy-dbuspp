@@ -28,9 +28,49 @@ object::object(session_manager& session_mgr, const std::string& interface_name, 
     session_manager_.attach(this);
 }
 
+// Must not be called from a method handler of the same object: it waits for in-flight requests to finish.
 object::~object() noexcept
 {
     session_manager_.detach(this);
+    lifetime_->close();
+}
+
+object::lifetime_guard::lifetime_guard(object* owner) noexcept : owner_ {owner}
+{
+}
+
+object* object::lifetime_guard::enter()
+{
+    const std::lock_guard lock {mutex_};
+
+    if (!owner_)
+        return nullptr;
+
+    ++in_flight_;
+    return owner_;
+}
+
+void object::lifetime_guard::leave() noexcept
+{
+    const std::lock_guard lock {mutex_};
+
+    if (--in_flight_ == 0)
+        cv_.notify_all();
+}
+
+void object::lifetime_guard::close()
+{
+    std::unique_lock lock {mutex_};
+
+    owner_ = nullptr;
+    cv_.wait(lock, [this] {
+        return in_flight_ == 0;
+    });
+}
+
+void object::free_registration_data(gpointer data) noexcept
+{
+    delete static_cast<lifetime_guard_ptr*>(data);
 }
 
 std::string object::introspection_xml() const
@@ -76,9 +116,13 @@ void object::connect()
     if (!introspection_data_)
         throw std::runtime_error("Could not initialize introspection XML: " + std::string {error->message});
 
+    // GDBus hands this to the request handlers instead of 'this', and keeps it alive until it has finished
+    // dispatching to them. It frees it itself, also when the registration fails.
+    auto* registration_data = new lifetime_guard_ptr {lifetime_};
+
     registration_id_ = g_dbus_connection_register_object(
         session_manager_.connection_, object_path_.generic_string().c_str(), introspection_data_->interfaces[0],
-        &interface_vtable_, this, nullptr, nullptr);
+        &interface_vtable_, registration_data, free_registration_data, nullptr);
 }
 
 void object::disconnect()
@@ -98,45 +142,59 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
 
     // Exceptions must not propagate into GLib, so everything up to the hand-off to the thread pool is guarded.
     try {
-        const dbus_context context {sender, interface_name, object_path, method_name};
+        const auto guard = *static_cast<lifetime_guard_ptr*>(user_data);
 
-        auto task = std::make_unique<std::function<void()>>([=] {
-            try {
-                auto* obj_ptr = static_cast<object*>(user_data);
+        // The request counts as in flight from now on, so the object can't be destroyed while it sits in the queue.
+        object* obj_ptr = guard->enter();
 
-                idle_detector::instance().ping(obj_ptr->object_path());
+        if (!obj_ptr)
+            throw std::runtime_error("The object no longer exists!");
 
-                auto it = obj_ptr->methods_.find(method_name);
+        try {
+            const dbus_context context {sender, interface_name, object_path, method_name};
 
-                if (it == obj_ptr->methods_.end())
-                    throw std::runtime_error("No method '"s + method_name + "' registered by object '"
-                                             + obj_ptr->object_path_.generic_string() + "'!");
+            auto task = std::make_unique<std::function<void()>>([=] {
+                const request_scope scope {*guard};
 
-                {
-                    pre_request_handler_t pre_handler;
+                try {
+                    idle_detector::instance().ping(obj_ptr->object_path());
+
+                    auto it = obj_ptr->methods_.find(method_name);
+
+                    if (it == obj_ptr->methods_.end())
+                        throw std::runtime_error("No method '"s + method_name + "' registered by object '"
+                                                 + obj_ptr->object_path_.generic_string() + "'!");
+
                     {
-                        const std::lock_guard lock {obj_ptr->pre_request_handler_mutex_};
-                        pre_handler = obj_ptr->pre_request_handler_;
+                        pre_request_handler_t pre_handler;
+                        {
+                            const std::lock_guard lock {obj_ptr->pre_request_handler_mutex_};
+                            pre_handler = obj_ptr->pre_request_handler_;
+                        }
+                        if (pre_handler)
+                            pre_handler(request_type::METHOD, context);
                     }
-                    if (pre_handler)
-                        pre_handler(request_type::METHOD, context);
+
+                    GDBusMessage* message = g_dbus_method_invocation_get_message(invocation);
+                    GUnixFDList*  fd_list = g_dbus_message_get_unix_fd_list(message);
+
+                    auto [ret, out_fd_list] = it->second(parameters, fd_list, context);
+                    g_dbus_method_invocation_return_value_with_unix_fd_list(invocation, ret, out_fd_list.get());
+
+                } catch (const std::exception& e) {
+                    return_method_error(invocation, interface_name, e.what());
+                } catch (...) {
+                    return_method_error(invocation, interface_name, "Unknown exception!");
                 }
+            });
 
-                GDBusMessage* message = g_dbus_method_invocation_get_message(invocation);
-                GUnixFDList*  fd_list = g_dbus_message_get_unix_fd_list(message);
+            thread_pool_.push(task.get());
+            task.release();
 
-                auto [ret, out_fd_list] = it->second(parameters, fd_list, context);
-                g_dbus_method_invocation_return_value_with_unix_fd_list(invocation, ret, out_fd_list.get());
-
-            } catch (const std::exception& e) {
-                return_method_error(invocation, interface_name, e.what());
-            } catch (...) {
-                return_method_error(invocation, interface_name, "Unknown exception!");
-            }
-        });
-
-        thread_pool_.push(task.get());
-        task.release();
+        } catch (...) {
+            guard->leave();
+            throw;
+        }
 
     } catch (const std::exception& e) {
         return_method_error(invocation, interface_name, e.what());
@@ -152,7 +210,13 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
     using namespace std::string_literals;
 
     try {
-        object* obj_ptr = static_cast<object*>(user_data);
+        const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+        object*    obj_ptr = guard->enter();
+
+        if (!obj_ptr)
+            throw std::runtime_error("The object no longer exists!");
+
+        const request_scope scope {*guard};
 
         idle_detector::instance().ping(obj_ptr->object_path());
 
@@ -198,7 +262,13 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
     using namespace std::string_literals;
 
     try {
-        auto* obj_ptr = static_cast<object*>(user_data);
+        const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+        object*    obj_ptr = guard->enter();
+
+        if (!obj_ptr)
+            throw std::runtime_error("The object no longer exists!");
+
+        const request_scope scope {*guard};
 
         idle_detector::instance().ping(obj_ptr->object_path());
 

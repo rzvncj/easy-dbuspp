@@ -9,8 +9,10 @@
 #include "params.h"
 #include "type_mapping.h"
 #include "types.h"
+#include <condition_variable>
 #include <cstdlib>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <utility>
 
@@ -168,6 +170,48 @@ public:
     object_path_t object_path() const;
 
 private:
+    /*
+     * Shared between the object and everything that may still use it after it is gone (queued method calls, GDBus
+     * dispatching on another thread). Lets the destructor wait for in-flight requests and lets late requests notice
+     * that the object no longer exists.
+     */
+    class lifetime_guard {
+    public:
+        explicit lifetime_guard(object* owner) noexcept;
+
+        //! Returns the owner and counts a request as in flight, or nullptr if the owner is being destroyed.
+        object* enter();
+
+        //! Ends a request counted by enter().
+        void leave() noexcept;
+
+        //! Refuses new requests and waits for the in-flight ones to finish.
+        void close();
+
+    private:
+        std::mutex              mutex_;
+        std::condition_variable cv_;
+        object*                 owner_;
+        size_t                  in_flight_ {0};
+    };
+
+    //! Ends a request counted by lifetime_guard::enter() when it goes out of scope.
+    class request_scope {
+    public:
+        explicit request_scope(lifetime_guard& guard) noexcept : guard_ {guard} { }
+        ~request_scope() noexcept { guard_.leave(); }
+
+        request_scope(const request_scope&)            = delete;
+        request_scope& operator=(const request_scope&) = delete;
+
+    private:
+        lifetime_guard& guard_;
+    };
+
+    using lifetime_guard_ptr = std::shared_ptr<lifetime_guard>;
+
+    static void free_registration_data(gpointer data) noexcept;
+
     std::string        introspection_xml() const;
     static std::string xml_escape(const std::string& text);
 
@@ -213,6 +257,7 @@ private:
     static g_thread_pool                                                                          thread_pool_;
     pre_request_handler_t                                                                         pre_request_handler_;
     std::mutex                               pre_request_handler_mutex_;
+    lifetime_guard_ptr                       lifetime_ {std::make_shared<lifetime_guard>(this)};
     static inline const GDBusInterfaceVTable interface_vtable_ {
         handle_method_call, handle_get_property, handle_set_property, {}};
 

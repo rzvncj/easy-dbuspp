@@ -102,6 +102,7 @@ test_names = [
     'properties',
     'property_setter_rejects',
     'exception_safety',
+    'object_destroyed_in_flight',
     'pre_request_handler',
     'broadcast_signal',
     'unicast_signal',
