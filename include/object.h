@@ -24,6 +24,10 @@ class session_manager;
  * This is the basic building block for a D-Bus service. It's a D-Bus interface and object all rolled into one.
  * When its associated session_manager object gets a bus connection, it will register the object on the bus and
  * start using the registered method callbacks and properties as incoming requests require.
+ *
+ * Objects should be fully set up (methods, properties, signals added) before the main loop is started. An object
+ * that is created after the session_manager already has its bus connection isn't registered automatically: call
+ * publish() once it has been set up.
  */
 class object {
 
@@ -168,6 +172,16 @@ public:
 
     //! Returns this object's unique object path.
     object_path_t object_path() const;
+
+    /*!
+     * Register the object on the bus right now, using what has been added to it so far. Only needed for objects
+     * created after their session_manager has already established its bus connection (before that, registration
+     * happens automatically). Calling it again re-registers the object, which makes later additions visible.
+     * Does nothing if there is no bus connection yet.
+     *
+     * @throw std::runtime_error if the registration fails (e.g. another object already uses this path and interface).
+     */
+    void publish();
 
 private:
     std::string        introspection_xml() const;

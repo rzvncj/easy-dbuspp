@@ -105,6 +105,7 @@ test_names = [
     'properties',
     'property_setter_rejects',
     'string_literal_property',
+    'object_registration',
     'exception_safety',
     'object_destroyed_in_flight',
     'object_self_destroy',

@@ -26,6 +26,12 @@ object::object(session_manager& session_mgr, const std::string& interface_name, 
       introspection_data_ {nullptr, g_dbus_node_info_unref}
 {
     session_manager_.attach(this);
+
+    if (session_manager_.connection_)
+        g_warning(
+            "Object '%s' was created after the bus connection was established, so it won't be registered "
+            "until publish() is called",
+            object_path_.generic_string().c_str());
 }
 
 // Must not be called from a method handler of the same object: it waits for in-flight requests to finish.
@@ -82,9 +88,25 @@ void object::connect()
     // dispatching to them. It frees it itself, also when the registration fails.
     auto* registration_data = new lifetime_guard_ptr {lifetime_};
 
+    raw_error = nullptr;
+
     registration_id_ = g_dbus_connection_register_object(
         session_manager_.connection_, object_path_.generic_string().c_str(), introspection_data_->interfaces[0],
-        &interface_vtable_, registration_data, free_lifetime_guard_ptr, nullptr);
+        &interface_vtable_, registration_data, free_lifetime_guard_ptr, &raw_error);
+    error.reset(raw_error);
+
+    if (registration_id_ == 0)
+        throw std::runtime_error("Could not register object '" + object_path_.generic_string()
+                                 + "': " + (error ? std::string {error->message} : "unknown error"));
+}
+
+void object::publish()
+{
+    if (!session_manager_.connection_)
+        return;
+
+    disconnect();
+    connect();
 }
 
 void object::disconnect()

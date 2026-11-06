@@ -191,6 +191,10 @@ If you want to start the loop asynchronously, that's possible too:
 easydbuspp::main_loop::instance().run_async();
 ```
 
+Objects are registered on the bus when the `session_manager` gets its bus connection, so set them up
+before starting the loop. If you create an object later, call `object.publish()` once it's set up. Registration
+failures (e.g. two objects using the same path and interface) are logged, and `publish()` throws.
+
 And that's it! You can introspect and use your shiny new D-Bus object with one of a variety of
 command line or GUI tools:
 
