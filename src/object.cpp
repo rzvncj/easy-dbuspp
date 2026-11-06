@@ -35,70 +35,6 @@ object::~object() noexcept
     lifetime_->close();
 }
 
-object::lifetime_guard::lifetime_guard(object* owner) noexcept : owner_ {owner}
-{
-}
-
-thread_local object::request_scope* object::request_scope::innermost_ {nullptr};
-
-object::request_scope::request_scope(lifetime_guard& guard) noexcept : guard_ {guard}, enclosing_ {innermost_}
-{
-    innermost_ = this;
-}
-
-object::request_scope::~request_scope() noexcept
-{
-    innermost_ = enclosing_;
-    guard_.leave();
-}
-
-bool object::request_scope::is_handling_request_of(const lifetime_guard& guard) noexcept
-{
-    for (const request_scope* scope = innermost_; scope; scope = scope->enclosing_)
-        if (&scope->guard_ == &guard)
-            return true;
-
-    return false;
-}
-
-object* object::lifetime_guard::enter()
-{
-    const std::lock_guard lock {mutex_};
-
-    if (!owner_)
-        return nullptr;
-
-    ++in_flight_;
-    return owner_;
-}
-
-void object::lifetime_guard::leave() noexcept
-{
-    const std::lock_guard lock {mutex_};
-
-    if (--in_flight_ == 0)
-        cv_.notify_all();
-}
-
-void object::lifetime_guard::close()
-{
-    // The request would be waiting for itself, and its handler would be destroyed while running.
-    if (request_scope::is_handling_request_of(*this))
-        g_error("An easydbuspp object can't be destroyed from within one of its own method or property handlers!");
-
-    std::unique_lock lock {mutex_};
-
-    owner_ = nullptr;
-    cv_.wait(lock, [this] {
-        return in_flight_ == 0;
-    });
-}
-
-void object::free_registration_data(gpointer data) noexcept
-{
-    delete static_cast<lifetime_guard_ptr*>(data);
-}
-
 std::string object::introspection_xml() const
 {
     return "<node>\n <interface name='" + interface_name_ + "'>\n" + methods_xml_ + properties_xml_ + signals_xml_
@@ -148,7 +84,7 @@ void object::connect()
 
     registration_id_ = g_dbus_connection_register_object(
         session_manager_.connection_, object_path_.generic_string().c_str(), introspection_data_->interfaces[0],
-        &interface_vtable_, registration_data, free_registration_data, nullptr);
+        &interface_vtable_, registration_data, free_lifetime_guard_ptr, nullptr);
 }
 
 void object::disconnect()
@@ -171,7 +107,7 @@ void object::handle_method_call(GDBusConnection* /* connection */, const gchar* 
         const auto guard = *static_cast<lifetime_guard_ptr*>(user_data);
 
         // The request counts as in flight from now on, so the object can't be destroyed while it sits in the queue.
-        object* obj_ptr = guard->enter();
+        object* obj_ptr = guard->enter<object>();
 
         if (!obj_ptr)
             throw std::runtime_error("The object no longer exists!");
@@ -237,7 +173,7 @@ GVariant* object::handle_get_property(GDBusConnection* /* connection */, const g
 
     try {
         const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
-        object*    obj_ptr = guard->enter();
+        object*    obj_ptr = guard->enter<object>();
 
         if (!obj_ptr)
             throw std::runtime_error("The object no longer exists!");
@@ -289,7 +225,7 @@ gboolean object::handle_set_property(GDBusConnection* /* connection */, const gc
 
     try {
         const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
-        object*    obj_ptr = guard->enter();
+        object*    obj_ptr = guard->enter<object>();
 
         if (!obj_ptr)
             throw std::runtime_error("The object no longer exists!");

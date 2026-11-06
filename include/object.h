@@ -6,10 +6,10 @@
 #define EASYDBUSPP_OBJECT_H_INCLUDED
 
 #include "g_thread_pool.h"
+#include "lifetime_guard.h"
 #include "params.h"
 #include "type_mapping.h"
 #include "types.h"
-#include <condition_variable>
 #include <cstdlib>
 #include <functional>
 #include <memory>
@@ -170,56 +170,6 @@ public:
     object_path_t object_path() const;
 
 private:
-    /*
-     * Shared between the object and everything that may still use it after it is gone (queued method calls, GDBus
-     * dispatching on another thread). Lets the destructor wait for in-flight requests and lets late requests notice
-     * that the object no longer exists.
-     */
-    class lifetime_guard {
-    public:
-        explicit lifetime_guard(object* owner) noexcept;
-
-        //! Returns the owner and counts a request as in flight, or nullptr if the owner is being destroyed.
-        object* enter();
-
-        //! Ends a request counted by enter().
-        void leave() noexcept;
-
-        //! Refuses new requests and waits for the in-flight ones to finish.
-        void close();
-
-    private:
-        std::mutex              mutex_;
-        std::condition_variable cv_;
-        object*                 owner_;
-        size_t                  in_flight_ {0};
-    };
-
-    /*
-     * Ends a request counted by lifetime_guard::enter() when it goes out of scope. It also tracks, per thread, which
-     * requests are currently being handled, so that destroying an object from its own request can be detected.
-     */
-    class request_scope {
-    public:
-        explicit request_scope(lifetime_guard& guard) noexcept;
-        ~request_scope() noexcept;
-
-        request_scope(const request_scope&)            = delete;
-        request_scope& operator=(const request_scope&) = delete;
-
-        //! Is the calling thread currently handling a request guarded by 'guard'?
-        static bool is_handling_request_of(const lifetime_guard& guard) noexcept;
-
-    private:
-        lifetime_guard&                    guard_;
-        request_scope*                     enclosing_;
-        static thread_local request_scope* innermost_;
-    };
-
-    using lifetime_guard_ptr = std::shared_ptr<lifetime_guard>;
-
-    static void free_registration_data(gpointer data) noexcept;
-
     std::string        introspection_xml() const;
     static std::string xml_escape(const std::string& text);
 

@@ -39,6 +39,7 @@ install_headers(
     'include/g_thread_pool.h',
     'include/idle_detector.h',
     'include/idle_detector.inl',
+    'include/lifetime_guard.h',
     'include/main_loop.h',
     'include/object.h',
     'include/object.inl',
@@ -56,6 +57,7 @@ easy_dbuspp = library(
     'easydbuspp',
     [
         'src/g_thread_pool.cpp',
+        'src/lifetime_guard.cpp',
         'src/object.cpp',
         'src/proxy.cpp',
         'src/org_freedesktop_dbus_proxy.cpp',
