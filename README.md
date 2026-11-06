@@ -94,7 +94,7 @@ ReturnMultipleValues(out i out_arg0,
 
 ### Adding properties
 
-D-Bus' properties can be read-only, read-write, and read-only. The library will figure out
+D-Bus' properties can be read-only, read-write, and write-only. The library will figure out
 what type a property is based on the type of the value provided (literals, `const`s, will be
 read-only properties automatically, while lvalues will be read-write properties
 automatically).
@@ -340,9 +340,9 @@ main processing loop. But before that, it should register for the signal, which,
 unsurprisingly, it can do by registering a callback:
 
 ```cpp
-session_manager.signal_subscribe("BroadcastSignal", [&session_manager](int i, const std::string& s, float f) {
+session_manager.signal_subscribe("BroadcastSignal", [](int i, const std::string& s, float f) {
     std::cout << "Got signal 'BroadcastSignal': [" << i << ", '" << s << "', " << f << "]\nExiting." << std::endl;
-    session_manager.stop();
+    easydbuspp::main_loop::instance().stop();
 });
 ```
 
@@ -391,9 +391,9 @@ std::string                            unique_bus_name =
 
 proxy_session_manager.signal_subscribe(
     "UnicastSignal",
-    [&proxy_session_manager](const std::string& s) {
+    [](const std::string& s) {
         std::cout << "Got signal UnicastSignal: ['" << s << "']" << std::endl;
-        proxy_session_manager.stop();
+        easydbuspp::main_loop::instance().stop();
     },
     unique_bus_name, "net.test.EasyDBuspp.TestInterface", "/net/test/EasyDBuspp/TestObject");
 ```
