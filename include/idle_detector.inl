@@ -13,12 +13,18 @@ namespace easydbuspp {
 template <typename Rep, typename Period>
 void idle_detector::enable(const std::chrono::duration<Rep, Period>& timeout)
 {
-    if (idle_future_.valid())
-        throw std::runtime_error("Idle detector already running!");
+    if (idle_future_.valid()) {
+        // A detector whose timeout has fired has finished its thread; reap it so it can be enabled again.
+        if (idle_future_.wait_for(std::chrono::seconds::zero()) != std::future_status::ready)
+            throw std::runtime_error("Idle detector already running!");
+
+        idle_future_.get();
+    }
 
     {
         const std::lock_guard lock {idle_mutex_};
-        stop_ = false;
+        stop_         = false;
+        request_ping_ = false;
     }
 
     idle_future_ = std::async(std::launch::async, [this, timeout] {

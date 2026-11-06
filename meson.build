@@ -102,6 +102,7 @@ test_names = [
     'handler_reentrancy',
     'unix_fd_nested',
     'properties_changed',
+    'idle_detector_reenable',
     'object_registration',
     'type_mismatch',
     'concurrent_objects',

@@ -39,6 +39,7 @@ public:
      * @param timeout If this timeout is reached with no requests (method calls, property reads or writes)
      *                after calling this function, the application will exit. If the idle detector thread
      *                is already running, the function will throw an `std::runtime_error` exception.
+     *                Once the timeout has fired, the detector can be enabled again.
      * @throw         std::runtime_error
      */
     template <typename Rep, typename Period>
