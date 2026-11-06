@@ -105,6 +105,7 @@ test_names = [
     'properties',
     'property_setter_rejects',
     'string_literal_property',
+    'move_only_callable',
     'object_registration',
     'type_mismatch',
     'concurrent_objects',

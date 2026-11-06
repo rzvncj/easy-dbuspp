@@ -73,6 +73,7 @@ public:
      * @param callable       Any callable object (as long as it can be converted to an `std::function`).
      *                       So a lambda, a function pointer, a custom functor, etc. The parameter
      *                       types and number must match the types and number of arguments of the signal.
+     *                       Move-only and `mutable` callables are fine.
      * @param sender         (Optional) If this is not empty, the unique bus name of the sender of the
      *                       signal. It would only not be empty for unicast signals. Broadcast signals
      *                       do not require this.

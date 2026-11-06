@@ -68,7 +68,9 @@ public:
      * @param name               The name of the method, as displayed when introspecting the D-Bus object.
      * @param callable           Any callable object at all (it can be an `std::function`, a lambda, a
      *                           function pointer, a custom functor, etc.). As long as it can be converted
-     *                           to a corresponding `std::function`.
+     *                           to a corresponding `std::function`. Move-only and `mutable` callables are
+     *                           fine, but methods run on a thread pool, so the callable may be invoked
+     *                           concurrently and must synchronize any state it mutates.
      * @param in_argument_names  (Optional) A list of parameter names that match each of the arguments of
      *                           `callable`. If the number of names differs from the number of parameters
      *                           `callable` takes, you will get an exception thrown.

@@ -72,7 +72,10 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
     method_xml += "  </method>\n";
     methods_xml_ += method_xml;
 
-    return [callable](GVariant* parameters, GUnixFDList* fd_list, const dbus_context& context) {
+    // std::function needs copyable handlers, so a shared callable is what allows move-only and mutable ones.
+    auto shared_callable = std::make_shared<std::decay_t<C>>(std::forward<C>(callable));
+
+    return [shared_callable](GVariant* parameters, GUnixFDList* fd_list, const dbus_context& context) {
         std::tuple<std::decay_t<A>...> fn_args;
         gsize                          arg_index {0};
 
@@ -94,16 +97,16 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
 
         if constexpr (!std::is_void_v<R>) {
             if constexpr (is_tuple_like_v<R>) {
-                auto ret         = std::apply(callable, fn_args);
+                auto ret         = std::apply(*shared_callable, fn_args);
                 auto out_fd_list = extract_g_unix_fd_list(ret);
                 return std::pair {to_gvariant(ret), std::move(out_fd_list)};
             } else {
-                auto wrapper     = std::tuple {std::apply(callable, fn_args)};
+                auto wrapper     = std::tuple {std::apply(*shared_callable, fn_args)};
                 auto out_fd_list = extract_g_unix_fd_list(wrapper);
                 return std::pair {to_gvariant(wrapper), std::move(out_fd_list)};
             }
         } else {
-            std::apply(callable, fn_args);
+            std::apply(*shared_callable, fn_args);
             return std::pair<GVariant*, g_unix_fd_list_ptr> {nullptr, g_unix_fd_list_ptr {nullptr, g_object_unref}};
         }
     };

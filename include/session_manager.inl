@@ -13,7 +13,10 @@ template <typename C, typename... A>
 session_manager::signal_handler_t session_manager::generate_signal_handler(C&& callable,
                                                                            const std::function<void(A...)>&)
 {
-    return [callable](GVariant* parameters) {
+    // std::function needs copyable handlers, so a shared callable is what allows move-only and mutable ones.
+    auto shared_callable = std::make_shared<std::decay_t<C>>(std::forward<C>(callable));
+
+    return [shared_callable](GVariant* parameters) {
         // Anybody can emit a signal with any parameters, so don't trust them.
         if (!parameters || !g_variant_is_of_type(parameters, to_dbus_type<std::tuple<std::decay_t<A>...>>()))
             throw std::runtime_error {"Signal parameters are of type '"
@@ -30,7 +33,7 @@ session_manager::signal_handler_t session_manager::generate_signal_handler(C&& c
             },
             fn_args);
 
-        std::apply(callable, fn_args);
+        std::apply(*shared_callable, fn_args);
     };
 }
 
