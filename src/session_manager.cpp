@@ -30,6 +30,21 @@ session_manager::session_manager(bus_type_t bus_type, const std::string& bus_nam
 
 session_manager::~session_manager() noexcept
 {
+    std::vector<guint> subscription_ids;
+
+    {
+        const std::lock_guard lock {signal_handlers_mutex_};
+        subscription_ids.swap(signal_subscription_ids_);
+    }
+
+    if (connection_) {
+        for (const guint id : subscription_ids)
+            g_dbus_connection_signal_unsubscribe(connection_, id);
+    }
+
+    // The connection is shared and outlives us, so signals may still be in flight. Wait for them.
+    lifetime_->close();
+
     if (connection_) {
         for (auto&& object_ptr : objects_)
             object_ptr->disconnect();
@@ -119,11 +134,39 @@ void session_manager::name_lost_handler(const name_lost_handler_t& handler)
     name_lost_handler_ = handler;
 }
 
+void session_manager::subscribe_to_signal(const std::string& signal_name, const std::string& sender,
+                                          const std::string& interface_name, const object_path_t& object_path)
+{
+    if (!connection_) {
+        g_critical("Can't subscribe to signal '%s': there is no D-Bus connection yet", signal_name.c_str());
+        return;
+    }
+
+    // GDBus keeps this (and calls free_lifetime_guard_ptr()) until the subscription is gone and no
+    // delivery is pending anymore.
+    auto* subscription_data = new lifetime_guard_ptr {lifetime_};
+
+    const guint id = g_dbus_connection_signal_subscribe(
+        connection_, sender.empty() ? nullptr : sender.c_str(),
+        interface_name.empty() ? nullptr : interface_name.c_str(), signal_name.c_str(),
+        object_path.empty() ? nullptr : object_path.generic_string().c_str(), nullptr, G_DBUS_SIGNAL_FLAGS_NONE,
+        on_signal, subscription_data, free_lifetime_guard_ptr);
+
+    const std::lock_guard lock {signal_handlers_mutex_};
+    signal_subscription_ids_.push_back(id);
+}
+
 void session_manager::on_signal(GDBusConnection* /* connection */, const gchar* /* sender_name */,
                                 const gchar* /* object_path */, const gchar* /* interface_name */,
                                 const gchar* signal_name, GVariant* parameters, gpointer user_data)
 {
-    auto* manager = static_cast<session_manager*>(user_data);
+    const auto guard   = *static_cast<lifetime_guard_ptr*>(user_data);
+    auto*      manager = guard->enter<session_manager>();
+
+    if (!manager)
+        return;
+
+    const request_scope scope {*guard};
 
     signal_handler_t handler;
 

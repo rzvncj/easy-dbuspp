@@ -106,6 +106,7 @@ test_names = [
     'exception_safety',
     'object_destroyed_in_flight',
     'object_self_destroy',
+    'session_manager_destroyed',
     'pre_request_handler',
     'broadcast_signal',
     'unicast_signal',

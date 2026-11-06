@@ -5,6 +5,7 @@
 #ifndef EASYDBUSPP_SESSION_MANAGER_H_INCLUDED
 #define EASYDBUSPP_SESSION_MANAGER_H_INCLUDED
 
+#include "lifetime_guard.h"
 #include "types.h"
 #include <functional>
 #include <gio/gio.h>
@@ -13,6 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace easydbuspp {
 
@@ -46,7 +48,7 @@ public:
      */
     session_manager(bus_type_t bus_type, const std::string& bus_name);
 
-    //! Destructor. Detaches attached objects, releases the bus name.
+    //! Destructor. Detaches attached objects, drops signal subscriptions, releases the bus name.
     ~session_manager() noexcept;
 
     session_manager(const session_manager&)            = delete;
@@ -86,6 +88,9 @@ private:
     void attach(object* object_ptr);
     void detach(object* object_ptr);
 
+    void subscribe_to_signal(const std::string& signal_name, const std::string& sender,
+                             const std::string& interface_name, const object_path_t& object_path);
+
     template <typename C, typename... A>
     signal_handler_t generate_signal_handler(C&& callable, const std::function<void(A...)>&);
 
@@ -106,6 +111,8 @@ private:
     GDBusConnection*                                  connection_ {nullptr};
     name_lost_handler_t                               name_lost_handler_;
     std::mutex                                        name_lost_handler_mutex_;
+    std::vector<guint>                                signal_subscription_ids_;
+    lifetime_guard_ptr                                lifetime_ {std::make_shared<lifetime_guard>(this)};
 
     friend class object;
     friend class proxy;
