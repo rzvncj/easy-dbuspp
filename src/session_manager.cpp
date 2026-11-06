@@ -19,13 +19,13 @@ session_manager::session_manager(bus_type_t bus_type)
         throw std::runtime_error("Can't connect to the bus: " + std::string {error->message});
 }
 
-session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name)
-    : owner_id_ {g_bus_own_name(
-          to_g_bus_type(bus_type), bus_name.c_str(),
-          static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
-          on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr)},
-      bus_name_ {bus_name}
+session_manager::session_manager(bus_type_t bus_type, const std::string& bus_name) : bus_name_ {bus_name}
 {
+    // Done here, once every member exists, because the callbacks may run on a main loop thread right away.
+    owner_id_ = g_bus_own_name(
+        to_g_bus_type(bus_type), bus_name.c_str(),
+        static_cast<GBusNameOwnerFlags>(G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE),
+        on_bus_acquired, on_name_acquired, on_name_lost, this, nullptr);
 }
 
 session_manager::~session_manager() noexcept
