@@ -46,6 +46,8 @@ session_manager::~session_manager() noexcept
     lifetime_->close();
 
     if (connection_) {
+        const std::lock_guard lock {objects_mutex_};
+
         for (auto&& object_ptr : objects_)
             object_ptr->disconnect();
     }
@@ -62,26 +64,41 @@ void session_manager::attach(object* object_ptr)
     if (!object_ptr)
         throw std::runtime_error("Won't register a nullptr object!");
 
+    const std::lock_guard lock {objects_mutex_};
     objects_.insert(object_ptr);
 }
 
 void session_manager::detach(object* object_ptr)
 {
     if (object_ptr) {
+        const std::lock_guard lock {objects_mutex_};
+
         object_ptr->disconnect();
         objects_.erase(object_ptr);
     }
+}
+
+void session_manager::set_connection(GDBusConnection* connection)
+{
+    if (!connection)
+        return;
+
+    // The connection passed to g_bus_own_name callbacks is not owned by us, so take our own reference
+    // that we can g_object_unref() in the destructor.
+    GDBusConnection* expected {nullptr};
+    auto* const      ref = static_cast<GDBusConnection*>(g_object_ref(connection));
+
+    if (!connection_.compare_exchange_strong(expected, ref))
+        g_object_unref(ref);
 }
 
 void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
     auto* manager = static_cast<session_manager*>(user_data);
 
-    // The connection passed to g_bus_own_name callbacks is not owned by us.
-    // Take our own reference so we can safely g_object_unref() in the destructor.
-    if (connection && !manager->connection_) {
-        manager->connection_ = static_cast<GDBusConnection*>(g_object_ref(connection));
-    }
+    manager->set_connection(connection);
+
+    const std::lock_guard lock {manager->objects_mutex_};
 
     for (auto&& obj_ptr : manager->objects_) {
         try {
@@ -98,18 +115,14 @@ void session_manager::on_name_acquired(GDBusConnection* connection, const gchar*
 {
     auto* manager = static_cast<session_manager*>(user_data);
 
-    // Guard: only take a ref if on_bus_acquired hasn't already set it.
-    if (connection && !manager->connection_)
-        manager->connection_ = static_cast<GDBusConnection*>(g_object_ref(connection));
+    manager->set_connection(connection);
 }
 
 void session_manager::on_name_lost(GDBusConnection* connection, const gchar* /* name */, gpointer user_data)
 {
     auto* manager = static_cast<session_manager*>(user_data);
 
-    // Guard: only take a ref if we don't already have one.
-    if (connection && !manager->connection_)
-        manager->connection_ = static_cast<GDBusConnection*>(g_object_ref(connection));
+    manager->set_connection(connection);
 
     const std::lock_guard lock {manager->name_lost_handler_mutex_};
 
