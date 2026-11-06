@@ -69,43 +69,13 @@ std::string to_dbus_type_string(T)
     return to_dbus_type_string<T>();
 }
 
+//! Returns the exact D-Bus type of T (e.g. "ai", not just "an array of anything").
 template <typename T>
 const GVariantType* to_dbus_type()
 {
-    if constexpr (decay_same_v<T, int16_t>)
-        return G_VARIANT_TYPE_INT16;
-    else if constexpr (decay_same_v<T, uint16_t>)
-        return G_VARIANT_TYPE_UINT16;
-    else if constexpr (decay_same_v<T, int32_t>)
-        return G_VARIANT_TYPE_INT32;
-    else if constexpr (decay_same_v<T, uint32_t>)
-        return G_VARIANT_TYPE_UINT32;
-    else if constexpr (decay_same_v<T, int64_t>)
-        return G_VARIANT_TYPE_INT64;
-    else if constexpr (decay_same_v<T, uint64_t>)
-        return G_VARIANT_TYPE_UINT64;
-    else if constexpr (decay_same_v<T, double> || decay_same_v<T, float>)
-        return G_VARIANT_TYPE_DOUBLE;
-    else if constexpr (decay_same_v<T, std::byte>)
-        return G_VARIANT_TYPE_BYTE;
-    else if constexpr (decay_same_v<T, std::string>)
-        return G_VARIANT_TYPE_STRING;
-    else if constexpr (decay_same_v<T, object_path_t>)
-        return G_VARIANT_TYPE_OBJECT_PATH;
-    else if constexpr (is_variant_v<T>)
-        return G_VARIANT_TYPE_VARIANT;
-    else if constexpr (decay_same_v<T, bool>)
-        return G_VARIANT_TYPE_BOOLEAN;
-    else if constexpr (is_vector_v<T>)
-        return G_VARIANT_TYPE_ARRAY;
-    else if constexpr (is_tuple_like_v<T>)
-        return G_VARIANT_TYPE_TUPLE;
-    else if constexpr (is_map_like_v<T>)
-        return G_VARIANT_TYPE_DICTIONARY;
-    else if constexpr (std::is_void_v<T>)
-        return G_VARIANT_TYPE_UNIT;
-    else
-        static_assert(always_false_v<T>, "Can't map T to a D-Bus type!");
+    // The GVariantType points into the string, so it has to live as long as the program does.
+    static const std::string type_string {to_dbus_type_string<T>()};
+    return G_VARIANT_TYPE(type_string.c_str());
 }
 
 template <typename T>
