@@ -20,7 +20,8 @@ void return_method_error(GDBusMethodInvocation* invocation, const gchar* interfa
 } // end of anonymous namespace
 
 object::object(session_manager& session_mgr, const std::string& interface_name, const object_path_t& object_path)
-    : session_manager_ {session_mgr}, manager_lifetime_ {session_mgr.lifetime_}, interface_name_ {interface_name}, object_path_ {object_path},
+    : session_manager_ {session_mgr}, manager_lifetime_ {session_mgr.lifetime_},
+      registry_ {session_mgr.registry_}, interface_name_ {interface_name}, object_path_ {object_path},
       introspection_data_ {nullptr, g_dbus_node_info_unref}
 {
     session_manager_.attach(this);
@@ -35,11 +36,14 @@ object::object(session_manager& session_mgr, const std::string& interface_name, 
 // Must not be called from a method handler of the same object: it waits for in-flight requests to finish.
 object::~object() noexcept
 {
-    // The session_manager may be gone already (it disconnects its objects when it is destroyed). If it isn't, entering
-    // keeps it from finishing its own destruction while we detach.
-    if (manager_lifetime_->enter<session_manager>()) {
-        const request_scope scope {*manager_lifetime_};
-        session_manager_.detach(this);
+    {
+        // If the session_manager is being destroyed (or is gone), it has cleared (or will clear) us out of the
+        // registry under this lock, after disconnecting us. If we are still in it, the session_manager is alive, and
+        // stays so until we release the lock.
+        const std::lock_guard lock {registry_->mutex};
+
+        if (registry_->objects.erase(this))
+            disconnect();
     }
 
     lifetime_->close();

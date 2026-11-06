@@ -22,6 +22,12 @@ namespace easydbuspp {
 class object;
 class proxy;
 
+//! The objects attached to a session_manager. Shared with them, so they can synchronize with its destruction.
+struct object_registry {
+    std::mutex                  mutex; // Guards objects, and is held while they connect/disconnect.
+    std::unordered_set<object*> objects;
+};
+
 /*!
  * session_manager manages the D-Bus connection and runs (if asked to) the main loop, which makes sure
  * events such as method calls, property queries and signal deliveries are processed.
@@ -89,7 +95,6 @@ public:
 
 private:
     void attach(object* object_ptr);
-    void detach(object* object_ptr);
 
     //! Take a reference on the connection GDBus hands to our callbacks, unless we already have one.
     void set_connection(GDBusConnection* connection);
@@ -119,8 +124,7 @@ private:
 private:
     guint                         owner_id_ {0};
     std::string                   bus_name_;
-    std::mutex                    objects_mutex_; // Guards objects_, and is held while they connect/disconnect.
-    std::unordered_set<object*>   objects_;
+    std::shared_ptr<object_registry> registry_ {std::make_shared<object_registry>()};
     std::mutex                    signal_subscriptions_mutex_;
     std::atomic<GDBusConnection*> connection_ {nullptr}; // Set (once) from the main loop thread.
     name_lost_handler_t           name_lost_handler_;

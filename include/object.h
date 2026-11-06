@@ -8,6 +8,7 @@
 #include "g_thread_pool.h"
 #include "lifetime_guard.h"
 #include "params.h"
+#include "session_manager.h"
 #include "type_mapping.h"
 #include "types.h"
 #include <cstdlib>
@@ -236,6 +237,7 @@ private:
 private:
     session_manager&                                                                              session_manager_;
     lifetime_guard_ptr                                                                            manager_lifetime_;
+    std::shared_ptr<object_registry>                                                              registry_;
     guint                                                                                         registration_id_ {0};
     std::string                                                                                   interface_name_;
     object_path_t                                                                                 object_path_;

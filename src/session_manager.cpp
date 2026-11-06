@@ -47,15 +47,16 @@ session_manager::~session_manager() noexcept
     lifetime_->close();
 
     {
-        const std::lock_guard lock {objects_mutex_};
+        const std::lock_guard lock {registry_->mutex};
 
         if (connection_) {
-            for (auto&& object_ptr : objects_)
+            for (auto&& object_ptr : registry_->objects)
                 object_ptr->disconnect();
         }
 
-        // Objects that outlive us must not be reached through us anymore.
-        objects_.clear();
+        // Objects that outlive us must not be reached through us anymore. One being destroyed right now is
+        // waiting for this lock, and finds it gone from the registry.
+        registry_->objects.clear();
     }
 
     if (owner_id_ != 0)
@@ -70,18 +71,8 @@ void session_manager::attach(object* object_ptr)
     if (!object_ptr)
         throw std::runtime_error("Won't register a nullptr object!");
 
-    const std::lock_guard lock {objects_mutex_};
-    objects_.insert(object_ptr);
-}
-
-void session_manager::detach(object* object_ptr)
-{
-    if (object_ptr) {
-        const std::lock_guard lock {objects_mutex_};
-
-        object_ptr->disconnect();
-        objects_.erase(object_ptr);
-    }
+    const std::lock_guard lock {registry_->mutex};
+    registry_->objects.insert(object_ptr);
 }
 
 void session_manager::set_connection(GDBusConnection* connection)
@@ -110,9 +101,9 @@ void session_manager::on_bus_acquired(GDBusConnection* connection, const gchar* 
 
     manager->set_connection(connection);
 
-    const std::lock_guard lock {manager->objects_mutex_};
+    const std::lock_guard lock {manager->registry_->mutex};
 
-    for (auto&& obj_ptr : manager->objects_) {
+    for (auto&& obj_ptr : manager->registry_->objects) {
         try {
             obj_ptr->connect();
         } catch (const std::exception& e) {
