@@ -43,6 +43,7 @@ install_headers(
     'include/session_manager.inl',
     'include/type_mapping.h',
     'include/types.h',
+    subdir: 'easy-dbuspp',
 )
 
 easy_dbuspp = library(
@@ -68,7 +69,7 @@ easy_dbuspp = library(
     install: true,
 )
 
-pkg.generate(easy_dbuspp)
+pkg.generate(easy_dbuspp, subdirs: 'easy-dbuspp')
 
 example_names = [
     'firefox_openurl',
