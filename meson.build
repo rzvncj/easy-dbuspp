@@ -22,14 +22,6 @@ dep_threads = dependency('threads')
 
 incdir = include_directories('include')
 
-conf = configuration_data()
-
-if build_machine.endian() == 'big'
-    conf.set('IS_BIG_ENDIAN', 1)
-endif
-
-configure_file(output: 'config.h', configuration: conf)
-
 pkg = import('pkgconfig')
 
 install_headers(

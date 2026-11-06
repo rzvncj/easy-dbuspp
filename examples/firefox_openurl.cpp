@@ -2,19 +2,34 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
-#include <config.h>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <easydbuspp.h>
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <vector>
 
-// Macro borrowed from the Mozilla source code where the encoding below is also described.
-// https://searchfox.org/mozilla-central/rev/dff5e85785ddeac045390db7f97922fbdb340f09/toolkit/components/remote/RemoteUtils.cpp#16
-#ifdef IS_BIG_ENDIAN
-#define TO_LITTLE_ENDIAN32(x) \
-    ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >> 8) | (((x) & 0x0000ff00) << 8) | (((x) & 0x000000ff) << 24))
-#else
-#define TO_LITTLE_ENDIAN32(x) (x)
-#endif
+namespace {
+
+// Appends a 32-bit integer in little-endian order, whatever the endianness of this machine.
+void append_le32(std::vector<std::byte>& out, uint32_t value)
+{
+    for (int shift = 0; shift < 32; shift += 8)
+        out.push_back(static_cast<std::byte>((value >> shift) & 0xff));
+}
+
+// Appends the string and its terminating NUL.
+void append_c_string(std::vector<std::byte>& out, const std::string& text)
+{
+    for (const char c : text)
+        out.push_back(static_cast<std::byte>(c));
+
+    out.push_back(std::byte {0});
+}
+
+} // end of anonymous namespace
 
 int main(int argc, char** argv)
 {
@@ -39,20 +54,20 @@ int main(int argc, char** argv)
         const std::string curr_path {std::filesystem::current_path()};
         const std::string url {argv[1]};
 
-        std::vector<std::byte> byte_url(sizeof(int32_t) * 3 + curr_path.length() + url.length() + 2);
-
         /*
          * Encoding algorithm from:
          * https://searchfox.org/mozilla-central/rev/dff5e85785ddeac045390db7f97922fbdb340f09/toolkit/components/remote/RemoteUtils.cpp#43
+         * A header of three integers (the number of strings, and the offsets of the two strings), followed by
+         * the working directory and the URL.
          */
-        int32_t* ip = reinterpret_cast<int32_t*>(byte_url.data());
-        ip[0]       = TO_LITTLE_ENDIAN32(int32_t(2));
-        ip[1]       = TO_LITTLE_ENDIAN32(int32_t(sizeof(int32_t) * 3));
-        ip[2]       = TO_LITTLE_ENDIAN32(int32_t(ip[1] + curr_path.length() + 1));
+        constexpr uint32_t HEADER_SIZE {sizeof(uint32_t) * 3};
 
-        char* cp = reinterpret_cast<char*>(byte_url.data()) + ip[1];
-        strncpy(cp, curr_path.c_str(), curr_path.length());
-        strncpy(cp + curr_path.length() + 1, url.c_str(), url.length());
+        std::vector<std::byte> byte_url;
+        append_le32(byte_url, 2);
+        append_le32(byte_url, HEADER_SIZE);
+        append_le32(byte_url, static_cast<uint32_t>(HEADER_SIZE + curr_path.length() + 1));
+        append_c_string(byte_url, curr_path);
+        append_c_string(byte_url, url);
 
         proxy.call<void>("OpenURL", byte_url);
 
