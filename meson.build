@@ -99,6 +99,7 @@ foreach name : example_names
 endforeach
 
 test_names = [
+    'main_loop_stop_before_run',
     'methods',
     'dbus_context',
     'properties',

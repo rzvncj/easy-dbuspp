@@ -15,7 +15,9 @@ main_loop::main_loop() : loop_ {g_main_loop_new(nullptr, FALSE)}
 
 main_loop::~main_loop() noexcept
 {
-    stop();
+    if (g_main_loop_is_running(loop_))
+        g_main_loop_quit(loop_);
+
     g_main_loop_unref(loop_);
 }
 
@@ -49,8 +51,21 @@ void main_loop::wait()
 
 void main_loop::stop() noexcept
 {
-    if (g_main_loop_is_running(loop_))
-        g_main_loop_quit(loop_);
+    // g_main_loop_quit() is a no-op if the loop isn't running yet, which would lose a stop() that races with
+    // run_async(). A source queued on the loop's context isn't lost: it fires as soon as the loop runs.
+    if (stop_pending_.exchange(true))
+        return;
+
+    g_idle_add(
+        [](gpointer param) -> gboolean {
+            auto* self = static_cast<main_loop*>(param);
+
+            self->stop_pending_ = false;
+            g_main_loop_quit(self->loop_);
+
+            return G_SOURCE_REMOVE;
+        },
+        this);
 }
 
 int main_loop::stop_sighandler(void* param)

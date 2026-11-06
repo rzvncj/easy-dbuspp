@@ -5,6 +5,7 @@
 #ifndef EASYDBUSPP_MAIN_LOOP_H_INCLUDED
 #define EASYDBUSPP_MAIN_LOOP_H_INCLUDED
 
+#include <atomic>
 #include <future>
 #include <gio/gio.h>
 
@@ -34,7 +35,7 @@ public:
     //! Wait on an async run to finish.
     void wait();
 
-    //! Stop the D-Bus event processing loop.
+    //! Stop the D-Bus event processing loop. A call made before the loop starts running makes it stop right away.
     void stop() noexcept;
 
     //! Return the unique, per-process instance.
@@ -46,6 +47,7 @@ private:
 private:
     GMainLoop*        loop_ {nullptr};
     std::future<void> run_future_;
+    std::atomic<bool> stop_pending_ {false};
 };
 
 } // end of namespace easydbuspp
