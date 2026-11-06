@@ -107,6 +107,7 @@ test_names = [
     'object_destroyed_in_flight',
     'object_self_destroy',
     'session_manager_destroyed',
+    'multiple_signal_subscriptions',
     'variant_alternatives',
     'pre_request_handler',
     'broadcast_signal',

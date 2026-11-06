@@ -34,12 +34,8 @@ void session_manager::signal_subscribe(const std::string& signal_name, C&& calla
 {
     using std_function_type = decltype(std::function {std::forward<C>(callable)});
 
-    {
-        const std::lock_guard lock {signal_handlers_mutex_};
-        signal_handlers_[signal_name] = generate_signal_handler(std::forward<C>(callable), std_function_type {});
-    }
-
-    subscribe_to_signal(signal_name, sender, interface_name, object_path);
+    subscribe_to_signal(signal_name, generate_signal_handler(std::forward<C>(callable), std_function_type {}), sender,
+                        interface_name, object_path);
 }
 
 } // end of namespace easydbuspp

@@ -88,8 +88,16 @@ private:
     void attach(object* object_ptr);
     void detach(object* object_ptr);
 
-    void subscribe_to_signal(const std::string& signal_name, const std::string& sender,
+    //! What GDBus passes to on_signal() for one subscription.
+    struct signal_subscription {
+        lifetime_guard_ptr guard;
+        signal_handler_t   handler;
+    };
+
+    void subscribe_to_signal(const std::string& signal_name, const signal_handler_t& handler, const std::string& sender,
                              const std::string& interface_name, const object_path_t& object_path);
+
+    static void free_signal_subscription(gpointer data) noexcept;
 
     template <typename C, typename... A>
     signal_handler_t generate_signal_handler(C&& callable, const std::function<void(A...)>&);
@@ -103,16 +111,15 @@ private:
                           gpointer user_data);
 
 private:
-    guint                                             owner_id_ {0};
-    std::string                                       bus_name_;
-    std::unordered_set<object*>                       objects_;
-    std::unordered_map<std::string, signal_handler_t> signal_handlers_;
-    mutable std::mutex                                signal_handlers_mutex_;
-    GDBusConnection*                                  connection_ {nullptr};
-    name_lost_handler_t                               name_lost_handler_;
-    std::mutex                                        name_lost_handler_mutex_;
-    std::vector<guint>                                signal_subscription_ids_;
-    lifetime_guard_ptr                                lifetime_ {std::make_shared<lifetime_guard>(this)};
+    guint                       owner_id_ {0};
+    std::string                 bus_name_;
+    std::unordered_set<object*> objects_;
+    std::mutex                  signal_subscriptions_mutex_;
+    GDBusConnection*            connection_ {nullptr};
+    name_lost_handler_t         name_lost_handler_;
+    std::mutex                  name_lost_handler_mutex_;
+    std::vector<guint>          signal_subscription_ids_; // Guarded by the mutex above.
+    lifetime_guard_ptr          lifetime_ {std::make_shared<lifetime_guard>(this)};
 
     friend class object;
     friend class proxy;
