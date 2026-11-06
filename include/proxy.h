@@ -43,6 +43,8 @@ public:
     /*!
      * Returns the bus name that the proxy is connected to (NOT the bus name of the remote object
      * it represents!).
+     *
+     * @throw std::runtime_error if the connection has no unique name (e.g. it was closed).
      */
     std::string unique_bus_name() const;
 

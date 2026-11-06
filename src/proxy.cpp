@@ -34,7 +34,13 @@ proxy::~proxy() noexcept
 
 std::string proxy::unique_bus_name() const
 {
-    return g_dbus_connection_get_unique_name(g_dbus_proxy_get_connection(proxy_));
+    // NULL when the connection is closed.
+    const gchar* name = g_dbus_connection_get_unique_name(g_dbus_proxy_get_connection(proxy_));
+
+    if (!name)
+        throw std::runtime_error("The proxy's D-Bus connection has no unique bus name (is it closed?)");
+
+    return name;
 }
 
 } // end of namespace easydbuspp
