@@ -45,11 +45,16 @@ session_manager::~session_manager() noexcept
     // The connection is shared and outlives us, so signals may still be in flight. Wait for them.
     lifetime_->close();
 
-    if (connection_) {
+    {
         const std::lock_guard lock {objects_mutex_};
 
-        for (auto&& object_ptr : objects_)
-            object_ptr->disconnect();
+        if (connection_) {
+            for (auto&& object_ptr : objects_)
+                object_ptr->disconnect();
+        }
+
+        // Objects that outlive us must not be reached through us anymore.
+        objects_.clear();
     }
 
     if (owner_id_ != 0)

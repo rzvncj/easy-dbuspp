@@ -32,6 +32,9 @@ class session_manager;
  * Objects should be fully set up (methods, properties, signals added) before the main loop is started. An object
  * that is created after the session_manager already has its bus connection isn't registered automatically: call
  * publish() once it has been set up.
+ *
+ * An object may be destroyed after its session_manager (which then disconnects it from the bus), but it can't be
+ * published or emit signals anymore.
  */
 class object {
 
@@ -232,6 +235,7 @@ private:
 
 private:
     session_manager&                                                                              session_manager_;
+    lifetime_guard_ptr                                                                            manager_lifetime_;
     guint                                                                                         registration_id_ {0};
     std::string                                                                                   interface_name_;
     object_path_t                                                                                 object_path_;

@@ -118,6 +118,7 @@ test_names = [
     'param_names',
     'invalid_strings',
     'duplicate_names',
+    'object_outlives_session_manager',
     'unix_fd_handler_throws',
     'watcher',
 ]

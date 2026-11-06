@@ -20,7 +20,7 @@ void return_method_error(GDBusMethodInvocation* invocation, const gchar* interfa
 } // end of anonymous namespace
 
 object::object(session_manager& session_mgr, const std::string& interface_name, const object_path_t& object_path)
-    : session_manager_ {session_mgr}, interface_name_ {interface_name}, object_path_ {object_path},
+    : session_manager_ {session_mgr}, manager_lifetime_ {session_mgr.lifetime_}, interface_name_ {interface_name}, object_path_ {object_path},
       introspection_data_ {nullptr, g_dbus_node_info_unref}
 {
     session_manager_.attach(this);
@@ -35,7 +35,13 @@ object::object(session_manager& session_mgr, const std::string& interface_name, 
 // Must not be called from a method handler of the same object: it waits for in-flight requests to finish.
 object::~object() noexcept
 {
-    session_manager_.detach(this);
+    // The session_manager may be gone already (it disconnects its objects when it is destroyed). If it isn't, entering
+    // keeps it from finishing its own destruction while we detach.
+    if (manager_lifetime_->enter<session_manager>()) {
+        const request_scope scope {*manager_lifetime_};
+        session_manager_.detach(this);
+    }
+
     lifetime_->close();
 }
 
