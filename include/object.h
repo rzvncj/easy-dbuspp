@@ -195,17 +195,25 @@ private:
         size_t                  in_flight_ {0};
     };
 
-    //! Ends a request counted by lifetime_guard::enter() when it goes out of scope.
+    /*
+     * Ends a request counted by lifetime_guard::enter() when it goes out of scope. It also tracks, per thread, which
+     * requests are currently being handled, so that destroying an object from its own request can be detected.
+     */
     class request_scope {
     public:
-        explicit request_scope(lifetime_guard& guard) noexcept : guard_ {guard} { }
-        ~request_scope() noexcept { guard_.leave(); }
+        explicit request_scope(lifetime_guard& guard) noexcept;
+        ~request_scope() noexcept;
 
         request_scope(const request_scope&)            = delete;
         request_scope& operator=(const request_scope&) = delete;
 
+        //! Is the calling thread currently handling a request guarded by 'guard'?
+        static bool is_handling_request_of(const lifetime_guard& guard) noexcept;
+
     private:
-        lifetime_guard& guard_;
+        lifetime_guard&                    guard_;
+        request_scope*                     enclosing_;
+        static thread_local request_scope* innermost_;
     };
 
     using lifetime_guard_ptr = std::shared_ptr<lifetime_guard>;

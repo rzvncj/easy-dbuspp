@@ -39,6 +39,28 @@ object::lifetime_guard::lifetime_guard(object* owner) noexcept : owner_ {owner}
 {
 }
 
+thread_local object::request_scope* object::request_scope::innermost_ {nullptr};
+
+object::request_scope::request_scope(lifetime_guard& guard) noexcept : guard_ {guard}, enclosing_ {innermost_}
+{
+    innermost_ = this;
+}
+
+object::request_scope::~request_scope() noexcept
+{
+    innermost_ = enclosing_;
+    guard_.leave();
+}
+
+bool object::request_scope::is_handling_request_of(const lifetime_guard& guard) noexcept
+{
+    for (const request_scope* scope = innermost_; scope; scope = scope->enclosing_)
+        if (&scope->guard_ == &guard)
+            return true;
+
+    return false;
+}
+
 object* object::lifetime_guard::enter()
 {
     const std::lock_guard lock {mutex_};
@@ -60,6 +82,10 @@ void object::lifetime_guard::leave() noexcept
 
 void object::lifetime_guard::close()
 {
+    // The request would be waiting for itself, and its handler would be destroyed while running.
+    if (request_scope::is_handling_request_of(*this))
+        g_error("An easydbuspp object can't be destroyed from within one of its own method or property handlers!");
+
     std::unique_lock lock {mutex_};
 
     owner_ = nullptr;
