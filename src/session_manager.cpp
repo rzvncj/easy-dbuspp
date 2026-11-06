@@ -177,6 +177,22 @@ void session_manager::subscribe_to_signal(const std::string& signal_name, const 
         return;
     }
 
+    // GDBus rejects invalid arguments without freeing the user data, so check them first.
+    if (!g_dbus_is_member_name(signal_name.c_str()))
+        throw std::runtime_error("Can't subscribe to signal: '" + signal_name + "' is not a valid signal name");
+
+    if (!sender.empty() && !g_dbus_is_name(sender.c_str()))
+        throw std::runtime_error("Can't subscribe to signal '" + signal_name + "': '" + sender
+                                 + "' is not a valid sender name");
+
+    if (!interface_name.empty() && !g_dbus_is_interface_name(interface_name.c_str()))
+        throw std::runtime_error("Can't subscribe to signal '" + signal_name + "': '" + interface_name
+                                 + "' is not a valid interface name");
+
+    if (!object_path.empty() && !g_variant_is_object_path(object_path.generic_string().c_str()))
+        throw std::runtime_error("Can't subscribe to signal '" + signal_name + "': '" + object_path.generic_string()
+                                 + "' is not a valid object path");
+
     // GDBus keeps this (and calls free_signal_subscription()) until the subscription is gone and no
     // delivery is pending anymore. Every subscription has its own handler.
     auto* subscription = new signal_subscription {lifetime_, handler};

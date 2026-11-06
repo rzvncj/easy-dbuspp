@@ -88,6 +88,8 @@ public:
      *                       Again, this will be missing for broadcast signals.
      * @param object_path    (Optional) The path of the object that is emitting the signal. Leave empty
      *                       when expecting broadcast signals.
+     *
+     * @throw std::runtime_error if the signal name, sender, interface name or object path isn't valid.
      */
     template <typename C>
     void signal_subscribe(const std::string& signal_name, C&& callable, const std::string& sender = {},

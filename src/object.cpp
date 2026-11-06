@@ -92,8 +92,17 @@ void object::connect()
     if (!introspection_data_)
         throw std::runtime_error("Could not initialize introspection XML: " + std::string {error->message});
 
+    // GDBus rejects invalid arguments without freeing the registration data, so check them first.
+    if (!g_variant_is_object_path(object_path_.generic_string().c_str()))
+        throw std::runtime_error("Could not register object: '" + object_path_.generic_string()
+                                 + "' is not a valid object path");
+
+    if (!g_dbus_is_interface_name(interface_name_.c_str()))
+        throw std::runtime_error("Could not register object '" + object_path_.generic_string() + "': '"
+                                 + interface_name_ + "' is not a valid interface name");
+
     // GDBus hands this to the request handlers instead of 'this', and keeps it alive until it has finished
-    // dispatching to them. It frees it itself, also when the registration fails.
+    // dispatching to them. It frees it itself, also when the registration fails (the checks above cover the cases where it wouldn't).
     auto* registration_data = new lifetime_guard_ptr {lifetime_};
 
     raw_error = nullptr;
