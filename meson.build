@@ -116,6 +116,7 @@ test_names = [
     'broadcast_signal',
     'unicast_signal',
     'param_names',
+    'invalid_strings',
     'watcher',
 ]
 

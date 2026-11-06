@@ -162,10 +162,20 @@ GVariant* to_gvariant(const T& t)
         return g_variant_new(to_dbus_type_string(t).c_str(), std::to_integer<uint8_t>(t));
     else if constexpr (decay_same_v<T, unix_fd_t>)
         return g_variant_new(to_dbus_type_string(t).c_str(), static_cast<gint32>(t));
-    else if constexpr (decay_same_v<T, std::string>)
+    else if constexpr (decay_same_v<T, std::string>) {
+        // GLib would log a critical and hand back garbage (or NULL) instead of failing.
+        if (!g_utf8_validate(t.c_str(), -1, nullptr))
+            throw std::runtime_error {"Can't convert a string that isn't valid UTF-8 to a GVariant!"};
+
         return g_variant_new(to_dbus_type_string(t).c_str(), t.c_str());
-    else if constexpr (decay_same_v<T, object_path_t>)
-        return g_variant_new(to_dbus_type_string(t).c_str(), t.generic_string().c_str());
+    } else if constexpr (decay_same_v<T, object_path_t>) {
+        const std::string path {t.generic_string()};
+
+        if (!g_variant_is_object_path(path.c_str()))
+            throw std::runtime_error {"'" + path + "' is not a valid D-Bus object path!"};
+
+        return g_variant_new(to_dbus_type_string(t).c_str(), path.c_str());
+    }
     else if constexpr (is_tuple_like_v<T>) {
         g_variant_builder_ptr builder {g_variant_builder_new(G_VARIANT_TYPE_TUPLE), g_variant_builder_unref};
 
