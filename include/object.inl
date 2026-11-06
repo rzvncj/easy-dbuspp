@@ -118,6 +118,9 @@ void object::add_method(const std::string& name, C&& callable, const std::vector
 {
     using std_function_type = decltype(std::function {std::forward<C>(callable)});
 
+    if (methods_.find(name) != methods_.end())
+        throw std::runtime_error("Method '" + name + "' was already added!");
+
     auto handler   = add_method_helper(name, std::forward<C>(callable), std_function_type {}, in_argument_names,
                                        out_argument_names);
     methods_[name] = handler;
@@ -177,6 +180,9 @@ std::function<void(const std::string&, A...)> object::add_signal(const std::stri
 template <typename T>
 void object::add_property(const std::string& name, T&& value)
 {
+    if (properties_.find(name) != properties_.end())
+        throw std::runtime_error("Property '" + name + "' was already added!");
+
     // C strings (including literals) can't be written to, and are stored as std::string so the property owns its value.
     constexpr bool is_c_string = decay_same_v<T, const char*> || decay_same_v<T, char*>;
     using stored_t             = std::conditional_t<is_c_string, std::string, std::decay_t<T>>;
@@ -214,6 +220,9 @@ void object::add_property(const std::string& name, const std::function<T()>& get
 {
     if (!setter && !getter)
         throw std::runtime_error("Property '" + name + "': needs to provide at least a setter or a getter!");
+
+    if (properties_.find(name) != properties_.end())
+        throw std::runtime_error("Property '" + name + "' was already added!");
 
     std::string property_xml {"  <property name='" + xml_escape(name) + "' type='" + to_dbus_type_string<T>()
                               + "' access='"};

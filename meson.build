@@ -117,6 +117,7 @@ test_names = [
     'unicast_signal',
     'param_names',
     'invalid_strings',
+    'duplicate_names',
     'watcher',
 ]
 

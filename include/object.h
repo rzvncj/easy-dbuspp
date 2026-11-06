@@ -82,7 +82,7 @@ public:
      *                           to `in_argument_names`, if this is not specified unique output argument names
      *                           will be generated automatically, and if the size of this vector differs from
      *                           the number of returned arguments, you will get an exception thrown at you.
-     * @throw                    std::runtime_error
+     * @throw                    std::runtime_error, also if a method with this name was already added.
      */
     template <typename C>
     void add_method(const std::string& name, C&& callable, const std::vector<std::string>& in_argument_names = {},
@@ -98,6 +98,7 @@ public:
      *              place, so it must outlive the object. Anything else (an rvalue, a const lvalue, a C string)
      *              is copied once, right now, and becomes a read-only property that never sees later changes
      *              to the original.
+     * @throw std::runtime_error if a property with this name was already added.
      */
     template <typename T>
     void add_property(const std::string& name, T&& value);
@@ -114,6 +115,7 @@ public:
      *               `bool` signifying success/failure to set). This will be called when a D-Bus client
      *               will try to set the variable. When it succeeds and there is a getter, a
      *               `"PropertiesChanged"` signal carrying the getter's value is emitted.
+     * @throw    std::runtime_error if neither is provided, or a property with this name was already added.
      */
     template <typename T>
     void add_property(const std::string& name, const std::function<T()>& getter,
