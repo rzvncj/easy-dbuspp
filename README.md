@@ -107,7 +107,7 @@ const double PI {3.1415};
 // Read-only property, because add_property() sees a const value.
 object.add_property("ReadOnlyDoubleProp", PI);
 
-// Read only property, because this decays to a const char*.
+// Read-only property, because a string literal is const. The library stores its own std::string copy.
 object.add_property("GreatestPhilosopher", "Ludwig Wittgenstein");
 
 // Read-write property, because readwrite_str is seen as an lvalue.

@@ -174,14 +174,18 @@ std::function<void(const std::string&, A...)> object::add_signal(const std::stri
 template <typename T>
 void object::add_property(const std::string& name, T&& value)
 {
-    std::string property_xml {"  <property name='" + xml_escape(name) + "' type='" + to_dbus_type_string<T>()
+    // C strings (including literals) can't be written to, and are stored as std::string so the property owns its value.
+    constexpr bool is_c_string = decay_same_v<T, const char*> || decay_same_v<T, char*>;
+    using stored_t             = std::conditional_t<is_c_string, std::string, std::decay_t<T>>;
+
+    std::string property_xml {"  <property name='" + xml_escape(name) + "' type='" + to_dbus_type_string<stored_t>()
                               + "' access='"};
 
-    if constexpr (!is_output_type_v<T>) {
+    if constexpr (is_c_string || !is_output_type_v<T>) {
         property_xml += "read";
         properties_[name] = std::pair<property_read_handler_t, property_write_handler_t>(
-            [value] {
-                return to_gvariant(value);
+            [stored = stored_t(value)] {
+                return to_gvariant(stored);
             },
             {});
     } else {

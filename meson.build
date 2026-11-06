@@ -104,6 +104,7 @@ test_names = [
     'dbus_context',
     'properties',
     'property_setter_rejects',
+    'string_literal_property',
     'exception_safety',
     'object_destroyed_in_flight',
     'object_self_destroy',
