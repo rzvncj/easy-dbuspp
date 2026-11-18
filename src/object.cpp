@@ -20,8 +20,8 @@ void return_method_error(GDBusMethodInvocation* invocation, const gchar* interfa
 } // end of anonymous namespace
 
 object::object(session_manager& session_mgr, const std::string& interface_name, const object_path_t& object_path)
-    : session_manager_ {session_mgr}, manager_lifetime_ {session_mgr.lifetime_},
-      registry_ {session_mgr.registry_}, interface_name_ {interface_name}, object_path_ {object_path},
+    : session_manager_ {session_mgr}, manager_lifetime_ {session_mgr.lifetime_}, registry_ {session_mgr.registry_},
+      interface_name_ {interface_name}, object_path_ {object_path},
       introspection_data_ {nullptr, g_dbus_node_info_unref}
 {
     session_manager_.attach(this);
@@ -102,7 +102,8 @@ void object::connect()
                                  + interface_name_ + "' is not a valid interface name");
 
     // GDBus hands this to the request handlers instead of 'this', and keeps it alive until it has finished
-    // dispatching to them. It frees it itself, also when the registration fails (the checks above cover the cases where it wouldn't).
+    // dispatching to them. It frees it itself, also when the registration fails (the checks above cover the cases where
+    // it wouldn't).
     auto* registration_data = new lifetime_guard_ptr {lifetime_};
 
     raw_error = nullptr;

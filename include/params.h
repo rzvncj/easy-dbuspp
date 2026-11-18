@@ -180,8 +180,7 @@ GVariant* to_gvariant(const T& t)
             throw std::runtime_error {"'" + path + "' is not a valid D-Bus object path!"};
 
         return g_variant_new(to_dbus_type_string(t).c_str(), path.c_str());
-    }
-    else if constexpr (is_tuple_like_v<T>) {
+    } else if constexpr (is_tuple_like_v<T>) {
         g_variant_builder_ptr builder {g_variant_builder_new(G_VARIANT_TYPE_TUPLE), g_variant_builder_unref};
 
         std::apply(

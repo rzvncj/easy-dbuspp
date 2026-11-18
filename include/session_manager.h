@@ -124,15 +124,15 @@ private:
                           gpointer user_data);
 
 private:
-    guint                         owner_id_ {0};
-    std::string                   bus_name_;
+    guint                            owner_id_ {0};
+    std::string                      bus_name_;
     std::shared_ptr<object_registry> registry_ {std::make_shared<object_registry>()};
-    std::mutex                    signal_subscriptions_mutex_;
-    std::atomic<GDBusConnection*> connection_ {nullptr}; // Set (once) from the main loop thread.
-    name_lost_handler_t           name_lost_handler_;
-    std::mutex                    name_lost_handler_mutex_;
-    std::vector<guint>            signal_subscription_ids_; // Guarded by the mutex above.
-    lifetime_guard_ptr            lifetime_ {std::make_shared<lifetime_guard>(this)};
+    std::mutex                       signal_subscriptions_mutex_;
+    std::atomic<GDBusConnection*>    connection_ {nullptr}; // Set (once) from the main loop thread.
+    name_lost_handler_t              name_lost_handler_;
+    std::mutex                       name_lost_handler_mutex_;
+    std::vector<guint>               signal_subscription_ids_; // Guarded by the mutex above.
+    lifetime_guard_ptr               lifetime_ {std::make_shared<lifetime_guard>(this)};
 
     friend class object;
     friend class proxy;

@@ -111,8 +111,7 @@ object::method_handler_t object::add_method_helper(const std::string& name, C&& 
                 }
             } else {
                 std::apply(*shared_callable, fn_args);
-                return std::pair<GVariant*, g_unix_fd_list_ptr> {nullptr,
-                                                                 g_unix_fd_list_ptr {nullptr, g_object_unref}};
+                return std::pair<GVariant*, g_unix_fd_list_ptr> {nullptr, g_unix_fd_list_ptr {nullptr, g_object_unref}};
             }
         } catch (...) {
             close_unchanged_fds(received_fds);
